@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+    <PropertyGroup>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProjectGuid>{43CBB168-3CB5-453C-858F-21212D9F2DB9}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>WaterFurnaceSymphonyCloudConnected</RootNamespace>
+        <AssemblyName>WaterFurnaceSymphonyCloudConnected</AssemblyName>
+        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+        <FileAlignment>512</FileAlignment>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="RADCommon, Version=4.1.0.16, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\..\..\Downloads\CrestronCertifiedDriversSDK_4.1.000.0016\SDK\Libraries\RADCommon.dll</HintPath>
+        </Reference>
+        <Reference Include="System" />
+        <Reference Include="System.Core" />
+        <Reference Include="System.Data" />
+        <Reference Include="System.Net.Http" />
+        <Reference Include="System.Xml" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="WaterFurnaceSymphonyCloudConnectedDevice.cs" />
+        <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="WaterFurnaceSymphonyPlatformProtocol.cs" />
+        <Compile Include="WaterFurnaceSymphonyTransport.cs" />
+        <Compile Include="WaterFurnaceSymphonyTransactionCounter.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="WaterFurnaceSymphonyCloudConnected.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Crestron.SimplSharp.SDK.Library" Version="2.14.154" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\source\repos\MAK2StarGrillCloudConnected\MAK2StarCommon\FlUrl\Flurl\src\Flurl.Http\Flurl.Http.csproj">
+        <Project>{46de9110-7eaf-4c27-bed9-fffa636947cb}</Project>
+        <Name>Flurl.Http</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\..\..\source\repos\MAK2StarGrillCloudConnected\MAK2StarCommon\FlUrl\Flurl\src\Flurl\Flurl.csproj">
+        <Project>{7549915b-0814-4d82-a50d-0e08c537b2af}</Project>
+        <Name>Flurl</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\WaterFurnaceCommon\WaterFurnaceCommon.csproj">
+        <Project>{ef6e8266-9092-4ffd-b2e1-685f366f77cd}</Project>
+        <Name>WaterFurnaceCommon</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\WaterFurnaceSymphonySingleDevice\WaterFurnaceSymphonySingleDevice.csproj">
+        <Project>{1f9c89d6-72b8-4d7e-8d0e-0b2c5d008ba2}</Project>
+        <Name>WaterFurnaceSymphonySingleDevice</Name>
+      </ProjectReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="IncludeInPkg\Translations\en-US.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="IncludeInPkg\UiDefinitions\UiDefinition.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
+    <PropertyGroup>
+        <PostBuildEvent>"c:\users\Daniel Berlin\Downloads\CrestronCertifiedDriversSDK_4.1.000.0016\SDK\ManifestUtil\ManifestUtil.exe" "$(TargetPath)"</PostBuildEvent>
+    </PropertyGroup>
+    <Import Project="..\ExtraTasks.targets" />
+    <Target Name="BeforeBuild">
+        <ReplaceFileText InputFilename="WaterFurnaceSymphonyCloudConnected.json" OutputFilename="WaterFurnaceSymphonyCloudConnected.json" MatchExpression="(VersionDate&quot;.*?&quot;)(.*?)(&quot;)" ReplacementText="$1 $(CurrentDate) $3" />
+    </Target>
+</Project>

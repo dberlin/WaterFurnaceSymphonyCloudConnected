@@ -1,0 +1,60 @@
+{
+  "CrestronSerialDeviceApi": {
+    "DeviceSupport": {
+      "SupportsUsername": true,
+      "SupportsPassword": true,
+      "SupportsDisconnect" : true,
+    },
+    "DeviceSupport2": [ "SupportsReconnect", "SupportsUsername", "SupportsPassword" ],
+    "GeneralInformation": {
+      "DeviceType": "Platform",
+      "Manufacturer": "WaterFurnace",
+      "BaseModel": "Symphony",
+      "VersionDate":" 2021-04-05 17:07:17.0538 ",
+      "DriverVersion": "4.1.000.0035",
+      "SdkVersion": "4.0.0",
+      "Description": "WaterFurnace Symphony support",
+      "Guid": "12661764-59ED-47CC-B06C-DE477DCE84AD",
+      "ExtensionDeviceData": {
+        "IsExtensionDevice": false,
+        "IsMediaDevice": false,
+        "IsMediaSource": false
+      },
+      "SupportedSeries": [ "Symphony" ],
+      "SupportedModels": [ "Symphony" ]
+    },
+    "Api": {
+      "Communication": {
+        "CommunicationType": 5,
+        "Protocol": -1,
+        "Baud": -1,
+        "Parity": -1,
+        "HwHandshake": -1,
+        "SwHandshake": -1,
+        "DataBits": 0,
+        "StopBits": -1,
+        "Port": 4444,
+        "EnableAutoPolling": false,
+        "EnableAutoReconnect": true,
+        "TimeBetweenCommands": 250,
+        "ResponseTimeout": 5000,
+        "WaitForResponse": false,
+        "IpProtocol": 0,
+        "IsUserAdjustable": false,
+        "Authentication": {
+          "UsernameRequired": true,
+          "PasswordRequired": true,
+          "Type": "UsernamePassword",
+          "Required": true,
+          "DefaultUsername": "",
+          "DefaultPassword": ""
+        },
+        "IsSecure": false,
+        "UserAdjustableProperties": [],
+        "DeviceId": 0
+      }
+    },
+    "UserAttributes": [],
+    "Dependencies": [ "Flurl.dll", "Flurl.Http.dll", "WaterFurnaceCommon.dll", "WaterFurnaceSymphonySingleDevice.dll", "websocket-sharp.dll"]
+  }
+}

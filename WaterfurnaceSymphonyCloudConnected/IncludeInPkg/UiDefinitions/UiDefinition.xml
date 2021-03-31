@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<uidefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:noNamespaceSchemaLocation="https://prd-use-rad-assets.azurewebsites.net/ExtensionsSchemaDefinition.xsd">
+    <version ver="2.0"/>
+    <tile icon="{ConnectionStateIcon}" navigation="show:MainPage" showinhomepage="#true"
+          showinroompage="#true"/>
+    <layouts>
+        <layout id="MainPage" isdefaultlayout="#true">
+            <controls>
+
+                <thermostat id="Thermostat" toplefticon="#icClimateRegular" title="^ThermostatTitle"
+                            heatmodeenabled="#true" coolmodeenabled="#true" automodeenabled="#false"
+                            temperatureunits="{ThermostatUnits}" modeicon="{ThermostatModeIcon}"
+                            currenttemperaturelabel="{ThermostatCurrentTempLabel}"
+                            currenttemperature="{ThermostatCurrentTemperature}"
+                            setpointcool="{ThermostatSetPointCool}"
+                            setpointheat="{ThermostatSetPointHeat}"/>
+                <subheader id="StatusHeader" label="^EquipmentStatusLabel"/>
+                <controlgroup>
+                    <textdisplay id="WaterTempDisplay" title="^WaterTempTitle" line1label="{WaterTempLabel}"/>
+                    <textdisplay id="TotalPowerUsage" title="^TotalPowerUsageTitle"
+                                 line1label="{TotalPowerUsageLine1Label}"/>
+                    <textdisplay id="CompressorPowerUsage" title="^CompressorPowerUsageTitle"
+                                 line1label="{CompressorPowerUsageLine1Label}"/>
+                    <textdisplay id="FanPowerUsage" title="^FanPowerUsageTitle" line1label="{FanPowerUsageLine1Label}"/>
+                    <textdisplay id="PumpPowerUsage" title="^PumpPowerUsageTitle"
+                                 line1label="{PumpPowerUsageLine1Label}"/>
+                    <textdisplay id="AuxHeatPowerUsage" title="^AuxHeatPowerUsageTitle"
+                                 line1label="{AuxHeatPowerUsageLine1Label}"/>
+                </controlgroup>
+            </controls>
+        </layout>
+    </layouts>
+    <alerts/>
+</uidefinition>

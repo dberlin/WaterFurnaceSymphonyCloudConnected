@@ -1,0 +1,10 @@
+{
+  "MainThermostatTitle": "Current Status",
+  "EquipmentStatusLabel": "Equipment Status",
+  "WaterTempTitle": "Water Temperature",
+  "TotalPowerUsageTitle": "Total Power Usage",
+  "CompressorPowerUsageTitle": "Compressor Power Usage",
+  "FanPowerUsageTitle": "Fan Power Usage",
+  "PumpPowerUsageTitle": "Pump Power Usage",
+  "AuxHeatPowerUsageTitle": "Aux Heat Power"
+}
