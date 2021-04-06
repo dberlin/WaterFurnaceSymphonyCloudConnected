@@ -2,7 +2,7 @@
 {
     public interface IWaterFurnacePlatformProtocol
     {
-        void SetHeatingSetPoint(IWaterFurnaceDevice device, double setPoint);
-        void SetCoolingSetPoint(IWaterFurnaceDevice device, double setPoint);
+        void SetHeatingSetPoint(IWaterFurnaceDevice device, int setPoint);
+        void SetCoolingSetPoint(IWaterFurnaceDevice device, int setPoint);
     }
 }

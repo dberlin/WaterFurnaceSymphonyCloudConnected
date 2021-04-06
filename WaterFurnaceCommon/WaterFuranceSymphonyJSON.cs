@@ -69,10 +69,12 @@
         [JsonProperty("zone")] public int Zone;
     }
 
-    public class SymphonyWriteCommand : SymphonyCommand
+    public class SymphonyWriteCommand
     {
+        [JsonProperty("cmd")] public string Command;
+        [JsonProperty("source")] public string Source;
         [JsonProperty("awlid")] public string AWLId;
-        [JsonProperty("zone")] public int Zone;
+        [JsonProperty("tid")] public uint TransactionId;
     }
 
     public class LoginResponse
@@ -245,9 +247,9 @@
 
         [JsonProperty("activemode")] public ThermostatMode ActiveMode { get; set; }
 
-        [JsonProperty("heatingsp_read")] public double HeatingSetPoint { get; set; }
+        [JsonProperty("heatingsp_read")] public int HeatingSetPoint { get; set; }
 
-        [JsonProperty("coolingsp_read")] public double CoolingSetPoint { get; set; }
+        [JsonProperty("coolingsp_read")] public int CoolingSetPoint { get; set; }
 
         [JsonProperty("fanmode_read")] public int FanMode { get; set; }
 

@@ -33,6 +33,10 @@
         {
             this.thermostatModeIcon.Value = "#icClimateRegular";
             this.thermostatUnits.Value = "Fahrenheit";
+            this.thermostatHeatModeEnabled.Value = true;
+            this.thermostatCoolModeEnabled.Value = true;
+            this.thermostatAutoModeEnabled.Value = false;
+
             this.Commit();
         }
 
@@ -48,6 +52,7 @@
         {
             if (this.Connected == connected) return;
             this.Connected = connected;
+            this.connectionStateIcon.Value = connected ? "#icClimateRegular" : "#icClimateDisabled";
         }
 
         public void SetThermostatName(string name)
@@ -57,15 +62,15 @@
 
         public void RefreshDeviceWithData(ReadResponse data)
         {
-            this.waterTempLabel.Value = $"Entering water temperature: {data.EnteringWaterTemp}°F";
+            this.waterTempLabel.Value = $"{data.EnteringWaterTemp}°F";
             this.totalPowerUsageLine1Label.Value = $"{data.TotalUnitPower}W";
             this.compressorPowerUsageLine1Label.Value = $"{data.CompressorPower}W";
             this.fanPowerUsageLine1Label.Value = $"{data.FanPower}W";
             this.pumpPowerUsageLine1Label.Value = $"{data.LoopPumpPower}W";
             this.auxHeatPowerUsageLine1Label.Value = $"{data.AuxPower}W";
             this.thermostatCurrentTemperature.Value = data.ThermostatRoomTemp;
-            this.thermostatSetPointCool.Value = (int) data.ActiveSettings.CoolingSetPoint;
-            this.thermostatSetPointHeat.Value = (int) data.ActiveSettings.HeatingSetPoint;
+            this.thermostatCoolSetPoint.Value = data.ActiveSettings.CoolingSetPoint;
+            this.thermostatHeatSetPoint.Value = data.ActiveSettings.HeatingSetPoint;
             switch (data.ModeOfOperation)
             {
                 case ThermostatModeOfOperation.Standby:
@@ -134,13 +139,23 @@
             this.thermostatModeIcon =
                 this.CreateProperty<string>(new PropertyDefinition(ThermostatModeIconKey, null,
                     DevicePropertyType.String));
-            this.thermostatSetPointCool = this.CreateProperty<int>(new PropertyDefinition(ThermostatSetPointCoolKey,
-                null, DevicePropertyType.Int32, 50, 99, 1));
-            this.thermostatSetPointHeat = this.CreateProperty<int>(new PropertyDefinition(ThermostatSetPointHeatKey,
-                null, DevicePropertyType.Int32, 50, 99, 1));
+            this.thermostatHeatModeEnabled =
+                this.CreateProperty<bool>(new PropertyDefinition(ThermostatHeatModeEnabledKey, null,
+                    DevicePropertyType.Boolean));
+            this.thermostatCoolModeEnabled =
+                this.CreateProperty<bool>(new PropertyDefinition(ThermostatCoolModeEnabledKey, null,
+                    DevicePropertyType.Boolean));
+            this.thermostatAutoModeEnabled =
+                this.CreateProperty<bool>(new PropertyDefinition(ThermostatAutoModeEnabledKey, null,
+                    DevicePropertyType.Boolean));
+            this.thermostatAutoSetPoint = this.CreateProperty<int>(new PropertyDefinition(ThermostatAutoSetPointKey,
+                null, DevicePropertyType.Int32, 50, 90, 1));
+            this.thermostatHeatSetPoint = this.CreateProperty<int>(new PropertyDefinition(ThermostatHeatSetPointKey,
+                null, DevicePropertyType.Int32, 45, 80, 1));
+            this.thermostatCoolSetPoint = this.CreateProperty<int>(new PropertyDefinition(ThermostatCoolSetPointKey,
+                null, DevicePropertyType.Int32, 65, 90, 1));
             this.thermostatCurrentTemperature = this.CreateProperty<double>(new PropertyDefinition(
-                ThermostatCurrentTemperatureKey, null, DevicePropertyType.Double,
-                0, 150, 0.1));
+                ThermostatCurrentTemperatureKey, null, DevicePropertyType.Double));
             this.thermostatCurrentTempLabel = this.CreateProperty<string>(new PropertyDefinition(
                 ThermostatCurrentTempLabelKey, null,
                 DevicePropertyType.String));
@@ -167,10 +182,14 @@
         #region UI Property Keys
 
         private const string ConnectionStateIconKey = "ConnectionStateIcon";
+        private const string ThermostatHeatModeEnabledKey = "ThermostatHeatModeEnabled";
+        private const string ThermostatCoolModeEnabledKey = "ThermostatCoolModeEnabled";
+        private const string ThermostatAutoModeEnabledKey = "ThermostatAutoModeEnabled";
         private const string ThermostatUnitsKey = "ThermostatUnits";
         private const string ThermostatModeIconKey = "ThermostatModeIcon";
-        private const string ThermostatSetPointCoolKey = "ThermostatSetPointCool";
-        private const string ThermostatSetPointHeatKey = "ThermostatSetPointHeat";
+        private const string ThermostatCoolSetPointKey = "ThermostatCoolSetPoint";
+        private const string ThermostatHeatSetPointKey = "ThermostatHeatSetPoint";
+        private const string ThermostatAutoSetPointKey = "ThermostatAutoSetPoint";
         private const string ThermostatCurrentTemperatureKey = "ThermostatCurrentTemperature";
         private const string ThermostatCurrentTempLabelKey = "ThermostatCurrentTempLabel";
         private const string WaterTempLabelKey = "WaterTempLabel";
@@ -185,10 +204,14 @@
         #region UI Properties
 
         private PropertyValue<string> connectionStateIcon;
+        private PropertyValue<bool> thermostatHeatModeEnabled;
+        private PropertyValue<bool> thermostatCoolModeEnabled;
+        private PropertyValue<bool> thermostatAutoModeEnabled;
         private PropertyValue<string> thermostatUnits;
         private PropertyValue<string> thermostatModeIcon;
-        private PropertyValue<int> thermostatSetPointCool;
-        private PropertyValue<int> thermostatSetPointHeat;
+        private PropertyValue<int> thermostatCoolSetPoint;
+        private PropertyValue<int> thermostatHeatSetPoint;
+        private PropertyValue<int> thermostatAutoSetPoint;
         private PropertyValue<double> thermostatCurrentTemperature;
         private PropertyValue<string> thermostatCurrentTempLabel;
         private PropertyValue<string> waterTempLabel;
@@ -213,22 +236,22 @@
         {
             switch (propertyKey)
             {
-                case ThermostatSetPointCoolKey:
+                case ThermostatCoolSetPointKey:
                 {
-                    if (value is double doubleValue)
+                    if (value is int intValue)
                     {
-                        this.thermostatSetPointCool.Value = (int) doubleValue;
-                        this.protocol.SetCoolingSetPoint(this, doubleValue);
+                        this.thermostatCoolSetPoint.Value = intValue;
+                        this.protocol.SetCoolingSetPoint(this, intValue);
                     }
 
                     break;
                 }
-                case ThermostatSetPointHeatKey:
+                case ThermostatHeatSetPointKey:
                 {
-                    if (value is double doubleValue)
+                    if (value is int intValue)
                     {
-                        this.thermostatSetPointHeat.Value = (int) doubleValue;
-                        this.protocol.SetHeatingSetPoint(this, doubleValue);
+                        this.thermostatHeatSetPoint.Value = intValue;
+                        this.protocol.SetHeatingSetPoint(this, intValue);
                     }
 
                     break;
