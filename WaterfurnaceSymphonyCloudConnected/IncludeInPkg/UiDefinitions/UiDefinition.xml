@@ -9,12 +9,16 @@
             <controls>
 
                 <thermostat id="Thermostat" toplefticon="#icClimateRegular" title="^ThermostatTitle"
-                            heatmodeenabled="#true" coolmodeenabled="#true" automodeenabled="#false"
+                            heatmodeenabled="{ThermostatHeatModeEnabled}"
+                            coolmodeenabled="{ThermostatCoolModeEnabled}"
+                            automodeenabled="{ThermostatAutoModeEnabled}"
                             temperatureunits="{ThermostatUnits}" modeicon="{ThermostatModeIcon}"
                             currenttemperaturelabel="{ThermostatCurrentTempLabel}"
                             currenttemperature="{ThermostatCurrentTemperature}"
-                            setpointcool="{ThermostatSetPointCool}"
-                            setpointheat="{ThermostatSetPointHeat}"/>
+                            setpointheat="{ThermostatHeatSetPoint}"
+                            setpointcool="{ThermostatCoolSetPoint}"
+                            setpointauto="{ThermostatAutoSetPoint}"
+                />
                 <subheader id="StatusHeader" label="^EquipmentStatusLabel"/>
                 <controlgroup>
                     <textdisplay id="WaterTempDisplay" title="^WaterTempTitle" line1label="{WaterTempLabel}"/>

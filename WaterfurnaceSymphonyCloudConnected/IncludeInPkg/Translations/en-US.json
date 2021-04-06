@@ -1,7 +1,7 @@
 {
   "MainThermostatTitle": "Current Status",
   "EquipmentStatusLabel": "Equipment Status",
-  "WaterTempTitle": "Water Temperature",
+  "WaterTempTitle": "Entering Water Temperature",
   "TotalPowerUsageTitle": "Total Power Usage",
   "CompressorPowerUsageTitle": "Compressor Power Usage",
   "FanPowerUsageTitle": "Fan Power Usage",

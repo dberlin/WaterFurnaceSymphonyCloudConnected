@@ -30,12 +30,12 @@
             this.isAuthenticatedToWaterFurnace = false;
         }
 
-        public void SetHeatingSetPoint(IWaterFurnaceDevice device, double setPoint)
+        public void SetHeatingSetPoint(IWaterFurnaceDevice device, int setPoint)
         {
             this.heatingSetPointChanges.Enqueue((device, setPoint));
         }
 
-        public void SetCoolingSetPoint(IWaterFurnaceDevice device, double setPoint)
+        public void SetCoolingSetPoint(IWaterFurnaceDevice device, int setPoint)
         {
             this.coolingSetPointChanges.Enqueue((device, setPoint));
         }
@@ -49,9 +49,9 @@
         {
             var serialized = JsonConvert.SerializeObject(thing);
             var serializedBytes = Encoding.UTF8.GetBytes(serialized);
-
             var sendResult = this.wssClient.Send(serializedBytes, (uint) serializedBytes.Length,
-                WebSocketClient.WEBSOCKET_PACKET_TYPES.LWS_WS_OPCODE_07__TEXT_FRAME);
+                WebSocketClient.WEBSOCKET_PACKET_TYPES.LWS_WS_OPCODE_07__TEXT_FRAME,
+                WebSocketClient.WEBSOCKET_PACKET_SEGMENT_CONTROL.WEBSOCKET_CLIENT_PACKET_END);
             if (sendResult != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_SUCCESS)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
@@ -89,7 +89,8 @@
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                     $"Did not receive a text message, got {opcode} and {bytes} instead");
-                throw new WebSocketException($"Did not receive a text message, got {opcode} and {bytes} instead");
+                throw new WebSocketException(
+                    $"Did not receive a text message, got {opcode} and {bytes} instead");
             }
 
             return bytes;
@@ -160,6 +161,7 @@
                 catch (Exception e)
                 {
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception in login handler:{e}");
+                    this.isAuthenticatedToWaterFurnace = false;
                 }
 
                 Thread.Sleep(5000);
@@ -264,6 +266,7 @@
                 Port = WebSocketClient.WEBSOCKET_DEF_SSL_SECURE_PORT,
                 DisconnectCallBack = this.WebSocketDisconnectHandler,
                 SSL = true,
+                KeepAlive = false,
             };
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Performing connect to {this.wssClient.URL}");
@@ -462,11 +465,23 @@
                 finalDeviceUpdates[device] = new Dictionary<string, object>();
 
             while (this.heatingSetPointChanges.TryDequeue(out var queuePair))
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
+                    $"Received heating point change {queuePair.temperature} for device {queuePair.device.AWLId}");
+
                 finalDeviceUpdates[queuePair.device]["heatingsp_write"] = queuePair.temperature;
+            }
+
             while (this.coolingSetPointChanges.TryDequeue(out var queuePair))
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
+                    $"Received cooling point change {queuePair.temperature} for device {queuePair.device.AWLId}");
+
                 finalDeviceUpdates[queuePair.device]["coolingsp_write"] = queuePair.temperature;
+            }
 
             foreach (var device in this.waterFurnaceDevices.Values)
+            {
                 try
                 {
                     // See if there are writes to be made
@@ -482,6 +497,7 @@
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                         $"Exception while sending read command:{e}");
                 }
+            }
         }
 
         private ReadResponse ReadDeviceData(IWaterFurnaceDevice device)
@@ -491,7 +507,6 @@
                 Source = SymphonyCommandSource.Dashboard,
                 TransactionId = this.transactionCounter.GetNextTransactionId(),
                 Command = "read",
-                SessionId = this.sessionId,
                 Zone = 0,
                 AWLId = device.AWLId,
                 RegisterList = WaterFurnaceConstants.DefaultReadList,
@@ -510,9 +525,7 @@
             {
                 Source = SymphonyCommandSource.Thermostat,
                 TransactionId = this.transactionCounter.GetNextTransactionId(),
-                Zone = 0,
                 AWLId = device.AWLId,
-                SessionId = this.sessionId,
                 Command = "write",
             };
             var writeJson = JObject.FromObject(writeCommand);
@@ -569,12 +582,12 @@
         private CancellationTokenSource backgroundLoginCancellation;
 
         // Queue of heating setpoint changes requested by devices
-        private readonly ConcurrentQueue<(IWaterFurnaceDevice device, double temperature)> heatingSetPointChanges =
-            new ConcurrentQueue<(IWaterFurnaceDevice device, double temperature)>();
+        private readonly ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)> heatingSetPointChanges =
+            new ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)>();
 
         // Queue of cooling setpoint changes requested by devices
-        private readonly ConcurrentQueue<(IWaterFurnaceDevice device, double temperature)> coolingSetPointChanges =
-            new ConcurrentQueue<(IWaterFurnaceDevice device, double temperature)>();
+        private readonly ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)> coolingSetPointChanges =
+            new ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)>();
 
         #endregion Fields
     }
