@@ -40,7 +40,7 @@
     <ItemGroup>
         <Compile Include="IWaterFurnaceDevice.cs" />
         <Compile Include="IWaterFurnacePlatformProtocol.cs" />
-        <Compile Include="WaterFuranceSymphonyJSON.cs" />
+        <Compile Include="WaterFurnaceSymphonyJSON.cs" />
         <Compile Include="WaterFurnaceConstants.cs" />
         <Compile Include="WaterFurnaceLogging.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
