@@ -481,7 +481,6 @@
             }
 
             foreach (var device in this.waterFurnaceDevices.Values)
-            {
                 try
                 {
                     // See if there are writes to be made
@@ -497,7 +496,6 @@
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                         $"Exception while sending read command:{e}");
                 }
-            }
         }
 
         private ReadResponse ReadDeviceData(IWaterFurnaceDevice device)
