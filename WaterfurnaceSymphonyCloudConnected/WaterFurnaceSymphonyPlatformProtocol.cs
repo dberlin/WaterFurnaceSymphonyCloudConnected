@@ -21,11 +21,6 @@
 
     public class WaterFurnaceSymphonyPlatformProtocol : AGatewayProtocol, IWaterFurnacePlatformProtocol
     {
-        private static string ToFormattedJson<T>(T thing)
-        {
-            return JsonConvert.SerializeObject(thing, Formatting.Indented);
-        }
-
         public WaterFurnaceSymphonyPlatformProtocol(string username, string password,
             ISerialTransport transport, byte id) : base(transport, id)
 
@@ -43,6 +38,11 @@
         public void SetCoolingSetPoint(IWaterFurnaceDevice device, double setPoint)
         {
             this.coolingSetPointChanges.Enqueue((device, setPoint));
+        }
+
+        private static string ToFormattedJson<T>(T thing)
+        {
+            return JsonConvert.SerializeObject(thing, Formatting.Indented);
         }
 
         private void SendWebSocketJson<T>(T thing)
@@ -263,7 +263,7 @@
                 URL = websocketUrl,
                 Port = WebSocketClient.WEBSOCKET_DEF_SSL_SECURE_PORT,
                 DisconnectCallBack = this.WebSocketDisconnectHandler,
-                SSL = true
+                SSL = true,
             };
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Performing connect to {this.wssClient.URL}");
@@ -372,8 +372,9 @@
                         continue;
                     }
 
-                    var deviceInstance = new WaterFurnaceSymphonySingleDevice(entry.GatewayId,
-                        entry.ThermostatName, this);
+                    var deviceInstance = new WaterFurnaceSymphonySingleDevice(entry.GatewayId, entry.ThermostatName,
+                        this.GetSeriesNameFromAbcType(entry.AWLABCType),
+                        this);
 
                     var pairedDeviceInfo = new GatewayPairedDeviceInformation(deviceId,
                         deviceInstance.ThermostatName, deviceInstance.Description, deviceInstance.Manufacturer,
@@ -410,6 +411,20 @@
             catch (Exception e)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception processing devices:{e}");
+            }
+        }
+
+        private string GetSeriesNameFromAbcType(AWLABCType abcType)
+        {
+            switch (abcType)
+            {
+                case AWLABCType.SingleSpeed:
+                case AWLABCType.DualSpeed:
+                    return "5 Series";
+                case AWLABCType.VariableSpeed:
+                    return "7 Series";
+                default:
+                    return "Unknown";
             }
         }
 
@@ -452,7 +467,6 @@
                 finalDeviceUpdates[queuePair.device]["coolingsp_write"] = queuePair.temperature;
 
             foreach (var device in this.waterFurnaceDevices.Values)
-            {
                 try
                 {
                     // See if there are writes to be made
@@ -468,7 +482,6 @@
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                         $"Exception while sending read command:{e}");
                 }
-            }
         }
 
         private ReadResponse ReadDeviceData(IWaterFurnaceDevice device)
@@ -495,7 +508,7 @@
         {
             var writeCommand = new SymphonyWriteCommand
             {
-                Source = SymphonyCommandSource.Dashboard,
+                Source = SymphonyCommandSource.Thermostat,
                 TransactionId = this.transactionCounter.GetNextTransactionId(),
                 Zone = 0,
                 AWLId = device.AWLId,
