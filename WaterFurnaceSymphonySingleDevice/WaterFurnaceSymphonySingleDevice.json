@@ -7,18 +7,24 @@
       "DeviceType": "HVAC",
       "Manufacturer": "WaterFurnace",
       "BaseModel": "Symphony",
-      "VersionDate": " 2021-04-05 17:06:48.7441 ",
+      "VersionDate": " 2021-04-05 20:26:38.1185 ",
       "DriverVersion": "4.1.000.0016",
       "SdkVersion": "4.0.0",
-      "Description": "HVAC Device",
-      "Guid": "12661764-59ED-47CC-B06C-DE477DCE84AD",
+      "Description": "Thermostat",
+      "Guid": "11661764-59ED-47CC-B06C-DE477DCE84AD",
       "ExtensionDeviceData": {
         "IsExtensionDevice": true,
         "IsMediaDevice": false,
         "IsMediaSource": false
       },
-      "SupportedSeries": [ "7 Series" ],
-      "SupportedModels": [  "7 Series" ]
+      "SupportedSeries": [
+        "5 Series",
+        "7 Series"
+      ],
+      "SupportedModels": [
+        "5 Series",
+        "7 Series"
+      ]
     },
     "Api": {
       "Communication": {
@@ -52,6 +58,8 @@
       }
     },
     "UserAttributes": [],
-    "Dependencies": ["MAK2StarCommon.dll"]
+    "Dependencies": [
+      "MAK2StarCommon.dll"
+    ]
   }
 }

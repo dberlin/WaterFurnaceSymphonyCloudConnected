@@ -34,6 +34,18 @@
         SingleSpeed = 1,
         DualSpeed = 2,
         VariableSpeed = 3,
+        WaterToWater = 4,
+        OptiHeat = 5,
+    }
+
+    public enum ThermostatType
+    {
+        Unknown = 100,
+        TPCM32U03 = 101,
+        TPCM32U04 = 102,
+        TPCC32U01 = 103,
+        IntelliZone2 = 105,
+        Hydro = 121,
     }
 
     public static class SymphonyCommandSource
@@ -111,7 +123,7 @@
 
         [JsonProperty("type")] public string Type { get; set; }
 
-        [JsonProperty("awltstattype")] public int AWLThermostatType { get; set; }
+        [JsonProperty("awltstattype")] public ThermostatType AWLThermostatType { get; set; }
 
         [JsonProperty("awltstattypedesc")] public string AWLThermostatDescription { get; set; }
 
@@ -119,7 +131,7 @@
 
         [JsonProperty("awlabctypedesc")] public string AWLABCTypeDescription { get; set; }
 
-        [JsonProperty("awlabctype")] public int AWLABCType { get; set; }
+        [JsonProperty("awlabctype")] public AWLABCType AWLABCType { get; set; }
 
         [JsonProperty("blowertype")] public int BlowerType { get; set; }
 
@@ -181,7 +193,7 @@
 
         [JsonProperty("auroraoutputrv")] public int AuroraOutputRV { get; set; }
 
-        [JsonProperty("awltstattype")] public int AwlThermostatType { get; set; }
+        [JsonProperty("awltstattype")] public ThermostatType AWLThermostatType { get; set; }
 
         [JsonProperty("humidity_offset_settings")]
         public HumidityOffsetSettings HumidityOffsetSettings { get; set; }
