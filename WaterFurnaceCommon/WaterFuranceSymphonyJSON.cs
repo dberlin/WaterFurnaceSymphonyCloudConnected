@@ -71,9 +71,9 @@
 
     public class SymphonyWriteCommand
     {
+        [JsonProperty("awlid")] public string AWLId;
         [JsonProperty("cmd")] public string Command;
         [JsonProperty("source")] public string Source;
-        [JsonProperty("awlid")] public string AWLId;
         [JsonProperty("tid")] public uint TransactionId;
     }
 
