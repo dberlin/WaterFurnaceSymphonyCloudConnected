@@ -370,7 +370,7 @@
                 else
                 {
                     // They are the same
-                    if (firstEntry.ThermostatName != secondEntry.ThermostatName)
+                    if (firstEntry.Description != secondEntry.Description)
                         result.Changed.Add((firstEntry, secondEntry));
 
                     ++firstIndex;

@@ -125,23 +125,37 @@
         {
             this.sessionTimeoutTimer = new Timer(SessionTimeoutLength);
             this.sessionTimeoutTimer.Elapsed += this.SessionTimeoutTriggered;
-            this.backgroundLoginCancellation = new CancellationTokenSource();
-            var token = this.backgroundLoginCancellation.Token;
-            this.backgroundLoginTask = Task.Run(() => { this.BackgroundLoginHandler(token); }, token);
+            this.backgroundWebSocketCancellation = new CancellationTokenSource();
+            var token = this.backgroundWebSocketCancellation.Token;
+            this.backgroundWebSocketTask = Task.Run(() => { this.BackgroundWebSocketHandler(token); }, token);
         }
 
         /**
-         * This routine handles ensuring we stay logged in and that the websocket client is connected and running
-         * properly.
-         * The login dance is complicated enough that having it handled this way, rather than trying to handle it
-         * during polling, is a lot less complicated.
-         */
-        private void BackgroundLoginHandler(CancellationToken cancelToken)
+         * This routine handles websocket send/receive.
+         * Unfortunately, they way Crestron does things makes no standard WebSocket client library work
+         * (including websocket-client, websocket-sharp, etc).  The Crestron provided Websocket client
+         * also doesn't provide enough functionality to port the libraries that rely on .net WebSocket functionality
+         * to crestron home.  Under the covers, it's really a C library being exposed through .net.
+         * Overall, the situation is a mess.
+         * To workaround all the fun issues inherent in this, we use the crestron websocket client synchronously
+         * (because the async API is hilariously bad), and to avoid blocking, do it in a thread.
+         *  */
+        private void BackgroundWebSocketHandler(CancellationToken cancelToken)
         {
+            bool firstTime = true;
             while (true)
             {
                 try
                 {
+                    if (!firstTime)
+                    {
+                        Thread.Sleep(5000);
+                    }
+                    else
+                    {
+                        firstTime = false;
+                    }
+
                     if (cancelToken.IsCancellationRequested)
                         return;
 
@@ -150,7 +164,13 @@
                     {
                         this.sessionTimeoutTriggered = false;
                         this.isAuthenticatedToWaterFurnace = false;
-                        this.RestartWebsocketConnection();
+                        if (!this.RestartWebsocketConnection())
+                        {
+                            WaterFurnaceLogging.TraceMessage(this.EnableLogging,
+                                "Error restarting websocket connection");
+
+                            continue;
+                        }
                     }
 
                     var isAlive = this.wssClient.Connected;
@@ -163,8 +183,6 @@
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception in login handler:{e}");
                     this.isAuthenticatedToWaterFurnace = false;
                 }
-
-                Thread.Sleep(5000);
             }
         }
 
@@ -172,9 +190,9 @@
         {
             try
             {
-                this.backgroundLoginCancellation.Cancel();
-                this.backgroundLoginTask.Wait();
-                this.backgroundLoginCancellation.Dispose();
+                this.backgroundWebSocketCancellation.Cancel();
+                this.backgroundWebSocketTask.Wait();
+                this.backgroundWebSocketCancellation.Dispose();
             }
             catch (Exception e)
             {
@@ -188,7 +206,7 @@
             this.wssClient = null;
         }
 
-        private void LoginUsingWeb()
+        private bool LoginUsingWeb()
         {
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Starting web login");
             this.sessionId = string.Empty;
@@ -216,17 +234,21 @@
                     // Return session ID
 
                     this.sessionId = loginResult.Cookies[0].Value;
+                    return true;
                 }
                 else
                 {
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                         $"Error Authenticating:{loginResult?.StatusCode}");
+                    return false;
                 }
             }
             catch (AggregateException e)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Error authenticating:{e}");
             }
+
+            return false;
         }
 
         private static string GetWebSocketUrl()
@@ -236,28 +258,33 @@
             return wssMatch.Success ? wssMatch.Value : "";
         }
 
-        private void RestartWebsocketConnection()
+        private bool RestartWebsocketConnection()
         {
             if (!this.isAuthenticatedToWaterFurnace)
-                this.LoginUsingWeb();
+            {
+                var result = this.LoginUsingWeb();
+                if (!result)
+                    return false;
+            }
+
             if (this.sessionId == string.Empty)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                     "Session ID was not set, must not have authenticated properly");
-                return;
+                return false;
             }
 
             var websocketUrl = GetWebSocketUrl();
             if (websocketUrl == string.Empty)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Could not find websocket URL");
-                return;
+                return false;
             }
 
-            this.SetupWssClient(websocketUrl);
+            return this.SetupWssClient(websocketUrl);
         }
 
-        private void SetupWssClient(string websocketUrl)
+        private bool SetupWssClient(string websocketUrl)
         {
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Creating websocket client");
             this.wssClient = new WebSocketClient
@@ -275,12 +302,12 @@
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                     $"Error while connecting to WebSocket:{connectResult}");
-                return;
+                return false;
             }
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Connect done, starting login");
 
-            this.PerformWebSocketLogin();
+            return this.PerformWebSocketLogin();
         }
 
         private int WebSocketDisconnectHandler(WebSocketClient.WEBSOCKET_RESULT_CODES error, object o1)
@@ -291,7 +318,7 @@
             return 0;
         }
 
-        private void PerformWebSocketLogin()
+        private bool PerformWebSocketLogin()
         {
             this.transactionCounter = new WaterFurnaceSymphonyTransactionCounter();
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Created transaction counter");
@@ -309,12 +336,13 @@
             var loginResponse = this.ReceiveWebSocketJson<LoginResponse>();
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Received JSON");
-            this.HandleLoginResponse(loginResponse);
+            var result = this.HandleLoginResponse(loginResponse);
             if (!this.IsConnected)
                 this.ConnectionChanged(true);
+            return result;
         }
 
-        private void HandleLoginResponse(LoginResponse loginResponse)
+        private bool HandleLoginResponse(LoginResponse loginResponse)
         {
             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                 $"Login response is {ToFormattedJson(loginResponse)}");
@@ -322,20 +350,25 @@
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Login failed, restarting client!");
                 this.wssClient.Disconnect();
+                return false;
             }
 
 
             var gateways = new List<Gateway>();
-            if (!loginResponse.Locations.Any()) return;
+            // Successful login but no devices
+            if (!loginResponse.Locations.Any()) return true;
             gateways = loginResponse.Locations.Aggregate(gateways,
                 (current, location) => current.Concat(location.Gateways).ToList());
             this.ProcessDeviceChanges(gateways);
+            return true;
         }
 
         private void ProcessDeviceChanges(List<Gateway> gatewayList)
         {
             try
             {
+                var oldEnableLogging = this.EnableLogging;
+                this.EnableLogging = true;
                 var gatewayListDiff = DifferenceOfGateways.GenerateDiff(this.lastLoginGatewayList, gatewayList);
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                     $"Old gateway list:{JsonConvert.SerializeObject(this.lastLoginGatewayList)}");
@@ -375,12 +408,12 @@
                         continue;
                     }
 
-                    var deviceInstance = new WaterFurnaceSymphonySingleDevice(entry.GatewayId, entry.ThermostatName,
+                    var deviceInstance = new WaterFurnaceSymphonySingleDevice(entry.GatewayId, entry.Description,
                         this.GetSeriesNameFromAbcType(entry.AWLABCType),
                         this);
 
                     var pairedDeviceInfo = new GatewayPairedDeviceInformation(deviceId,
-                        deviceInstance.ThermostatName, deviceInstance.Description, deviceInstance.Manufacturer,
+                        entry.Description, deviceInstance.Description, deviceInstance.Manufacturer,
                         deviceInstance.Model, deviceInstance.DeviceType,
                         deviceInstance.DeviceSubType);
                     this.waterFurnaceDevices.Add(deviceId, deviceInstance);
@@ -401,15 +434,16 @@
                     var deviceInstance = this.waterFurnaceDevices[beforeDeviceId];
 
                     var pairedDeviceInfo = new GatewayPairedDeviceInformation(beforeDeviceId,
-                        entry.After.ThermostatName, deviceInstance.Description, deviceInstance.Manufacturer,
+                        entry.After.Description, deviceInstance.Description, deviceInstance.Manufacturer,
                         deviceInstance.Model, deviceInstance.DeviceType,
                         deviceInstance.DeviceSubType);
 
-                    deviceInstance.SetThermostatName(entry.After.ThermostatName);
+                    deviceInstance.SetThermostatName(entry.After.Description);
                     this.UpdatePairedDevice(beforeDeviceId, pairedDeviceInfo);
                 }
 
                 this.lastLoginGatewayList = gatewayList;
+                this.EnableLogging = oldEnableLogging;
             }
             catch (Exception e)
             {
@@ -576,8 +610,8 @@
         private List<Gateway> lastLoginGatewayList;
 
         // Background thread that handles staying logged in
-        private Task backgroundLoginTask;
-        private CancellationTokenSource backgroundLoginCancellation;
+        private Task backgroundWebSocketTask;
+        private CancellationTokenSource backgroundWebSocketCancellation;
 
         // Queue of heating setpoint changes requested by devices
         private readonly ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)> heatingSetPointChanges =
