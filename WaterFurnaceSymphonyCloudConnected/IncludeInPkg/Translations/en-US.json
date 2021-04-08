@@ -2,6 +2,7 @@
   "MainThermostatTitle": "Current Status",
   "EquipmentStatusLabel": "Equipment Status",
   "WaterTempTitle": "Entering Water Temperature",
+  "ReturnAirTempTitle": "Return Air Temperature",
   "TotalPowerUsageTitle": "Total Power Usage",
   "CompressorPowerUsageTitle": "Compressor Power Usage",
   "FanPowerUsageTitle": "Fan Power Usage",

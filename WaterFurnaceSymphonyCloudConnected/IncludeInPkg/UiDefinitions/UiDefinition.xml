@@ -22,15 +22,16 @@
                 <subheader id="StatusHeader" label="^EquipmentStatusLabel"/>
                 <controlgroup>
                     <textdisplay id="WaterTempDisplay" title="^WaterTempTitle" line1label="{WaterTempLabel}"/>
+                    <textdisplay id="ReturnAirTempDisplay" title="^ReturnAirTempTitle" line1label="{ReturnAirTempLabel}"/>
                     <textdisplay id="TotalPowerUsage" title="^TotalPowerUsageTitle"
-                                 line1label="{TotalPowerUsageLine1Label}"/>
+                                 line1label="{TotalPowerUsageLabel}"/>
                     <textdisplay id="CompressorPowerUsage" title="^CompressorPowerUsageTitle"
-                                 line1label="{CompressorPowerUsageLine1Label}"/>
-                    <textdisplay id="FanPowerUsage" title="^FanPowerUsageTitle" line1label="{FanPowerUsageLine1Label}"/>
+                                 line1label="{CompressorPowerUsageLabel}"/>
+                    <textdisplay id="FanPowerUsage" title="^FanPowerUsageTitle" line1label="{FanPowerUsageLabel}"/>
                     <textdisplay id="PumpPowerUsage" title="^PumpPowerUsageTitle"
-                                 line1label="{PumpPowerUsageLine1Label}"/>
+                                 line1label="{PumpPowerUsageLabel}"/>
                     <textdisplay id="AuxHeatPowerUsage" title="^AuxHeatPowerUsageTitle"
-                                 line1label="{AuxHeatPowerUsageLine1Label}"/>
+                                 line1label="{AuxHeatPowerUsageLabel}"/>
                 </controlgroup>
             </controls>
         </layout>

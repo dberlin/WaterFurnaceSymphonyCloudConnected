@@ -63,11 +63,12 @@
         public void RefreshDeviceWithData(ReadResponse data)
         {
             this.waterTempLabel.Value = $"{data.EnteringWaterTemp}°F";
-            this.totalPowerUsageLine1Label.Value = $"{data.TotalUnitPower}W";
-            this.compressorPowerUsageLine1Label.Value = $"{data.CompressorPower}W";
-            this.fanPowerUsageLine1Label.Value = $"{data.FanPower}W";
-            this.pumpPowerUsageLine1Label.Value = $"{data.LoopPumpPower}W";
-            this.auxHeatPowerUsageLine1Label.Value = $"{data.AuxPower}W";
+            this.returnAirTempLabel.Value = $"{data.LeavingAirTemp}°F";
+            this.totalPowerUsageLabel.Value = $"{data.TotalUnitPower}W";
+            this.compressorPowerUsageLabel.Value = $"{data.CompressorPower}W";
+            this.fanPowerUsageLabel.Value = $"{data.FanPower}W";
+            this.pumpPowerUsageLabel.Value = $"{data.LoopPumpPower}W";
+            this.auxHeatPowerUsageLabel.Value = $"{data.AuxPower}W";
             this.thermostatCurrentTemperature.Value = data.ThermostatRoomTemp;
             this.thermostatCoolSetPoint.Value = data.ActiveSettings.CoolingSetPoint;
             this.thermostatHeatSetPoint.Value = data.ActiveSettings.HeatingSetPoint;
@@ -155,27 +156,29 @@
             this.thermostatCoolSetPoint = this.CreateProperty<int>(new PropertyDefinition(ThermostatCoolSetPointKey,
                 null, DevicePropertyType.Int32, 65, 90, 1));
             this.thermostatCurrentTemperature = this.CreateProperty<double>(new PropertyDefinition(
-                ThermostatCurrentTemperatureKey, null, DevicePropertyType.Double));
+                ThermostatCurrentTemperatureKey, null, DevicePropertyType.Double, 50, 95, 0.1));
             this.thermostatCurrentTempLabel = this.CreateProperty<string>(new PropertyDefinition(
                 ThermostatCurrentTempLabelKey, null,
                 DevicePropertyType.String));
             this.waterTempLabel =
                 this.CreateProperty<string>(new PropertyDefinition(WaterTempLabelKey, null, DevicePropertyType.String));
-
-            this.totalPowerUsageLine1Label =
-                this.CreateProperty<string>(new PropertyDefinition(TotalPowerUsageLine1LabelKey, null,
+            this.returnAirTempLabel =
+                this.CreateProperty<string>(new PropertyDefinition(ReturnAirTempLabelKey, null,
                     DevicePropertyType.String));
-            this.compressorPowerUsageLine1Label =
-                this.CreateProperty<string>(new PropertyDefinition(CompressorPowerUsageLine1LabelKey, null,
+            this.totalPowerUsageLabel =
+                this.CreateProperty<string>(new PropertyDefinition(TotalPowerUsageLabelKey, null,
                     DevicePropertyType.String));
-            this.fanPowerUsageLine1Label =
-                this.CreateProperty<string>(new PropertyDefinition(FanPowerUsageLine1LabelKey, null,
+            this.compressorPowerUsageLabel =
+                this.CreateProperty<string>(new PropertyDefinition(CompressorPowerUsageLabelKey, null,
                     DevicePropertyType.String));
-            this.pumpPowerUsageLine1Label =
-                this.CreateProperty<string>(new PropertyDefinition(PumpPowerUsageLine1LabelKey, null,
+            this.fanPowerUsageLabel =
+                this.CreateProperty<string>(new PropertyDefinition(FanPowerUsageLabelKey, null,
                     DevicePropertyType.String));
-            this.auxHeatPowerUsageLine1Label =
-                this.CreateProperty<string>(new PropertyDefinition(AuxHeatPowerUsageLine1LabelKey, null,
+            this.pumpPowerUsageLabel =
+                this.CreateProperty<string>(new PropertyDefinition(PumpPowerUsageLabelKey, null,
+                    DevicePropertyType.String));
+            this.auxHeatPowerUsageLabel =
+                this.CreateProperty<string>(new PropertyDefinition(AuxHeatPowerUsageLabelKey, null,
                     DevicePropertyType.String));
         }
 
@@ -193,11 +196,12 @@
         private const string ThermostatCurrentTemperatureKey = "ThermostatCurrentTemperature";
         private const string ThermostatCurrentTempLabelKey = "ThermostatCurrentTempLabel";
         private const string WaterTempLabelKey = "WaterTempLabel";
-        private const string TotalPowerUsageLine1LabelKey = "TotalPowerUsageLine1Label";
-        private const string CompressorPowerUsageLine1LabelKey = "CompressorPowerUsageLine1Label";
-        private const string FanPowerUsageLine1LabelKey = "FanPowerUsageLine1Label";
-        private const string PumpPowerUsageLine1LabelKey = "PumpPowerUsageLine1Label";
-        private const string AuxHeatPowerUsageLine1LabelKey = "AuxHeatPowerUsageLine1Label";
+        private const string ReturnAirTempLabelKey = "ReturnAirTempLabel";
+        private const string TotalPowerUsageLabelKey = "TotalPowerUsageLabel";
+        private const string CompressorPowerUsageLabelKey = "CompressorPowerUsageLabel";
+        private const string FanPowerUsageLabelKey = "FanPowerUsageLabel";
+        private const string PumpPowerUsageLabelKey = "PumpPowerUsageLabel";
+        private const string AuxHeatPowerUsageLabelKey = "AuxHeatPowerUsageLabel";
 
         #endregion
 
@@ -215,11 +219,12 @@
         private PropertyValue<double> thermostatCurrentTemperature;
         private PropertyValue<string> thermostatCurrentTempLabel;
         private PropertyValue<string> waterTempLabel;
-        private PropertyValue<string> totalPowerUsageLine1Label;
-        private PropertyValue<string> compressorPowerUsageLine1Label;
-        private PropertyValue<string> fanPowerUsageLine1Label;
-        private PropertyValue<string> pumpPowerUsageLine1Label;
-        private PropertyValue<string> auxHeatPowerUsageLine1Label;
+        private PropertyValue<string> totalPowerUsageLabel;
+        private PropertyValue<string> compressorPowerUsageLabel;
+        private PropertyValue<string> fanPowerUsageLabel;
+        private PropertyValue<string> pumpPowerUsageLabel;
+        private PropertyValue<string> auxHeatPowerUsageLabel;
+        private PropertyValue<string> returnAirTempLabel;
 
         #endregion
 

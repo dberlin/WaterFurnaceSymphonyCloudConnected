@@ -5,7 +5,7 @@
       "SupportsPassword": true,
       "SupportsDisconnect": true
     },
-    "DeviceSupport2": [
+    "DeviceSupport2":  [
       "SupportsReconnect",
       "SupportsUsername",
       "SupportsPassword"
@@ -14,8 +14,8 @@
       "DeviceType": "Platform",
       "Manufacturer": "WaterFurnace",
       "BaseModel": "Symphony",
-      "VersionDate": " 2021-04-06 22:51:00.1331 ",
-      "DriverVersion": "4.1.000.0055",
+      "VersionDate": " 2021-04-08 18:15:02.5872 ",
+      "DriverVersion": "4.1.000.0061",
       "SdkVersion": "4.0.0",
       "Description": "WaterFurnace Symphony support", 
       "Guid": "12661764-59ED-47CC-B06C-DE477DCE84AD",

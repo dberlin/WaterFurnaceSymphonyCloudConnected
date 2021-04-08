@@ -43,6 +43,7 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="WaterFurnaceSymphonyWebsocketClient.cs" />
         <Compile Include="WaterFurnaceSymphonyCloudConnectedDevice.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="WaterFurnaceSymphonyPlatformProtocol.cs" />

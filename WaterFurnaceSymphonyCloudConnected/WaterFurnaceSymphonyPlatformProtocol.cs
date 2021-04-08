@@ -4,8 +4,6 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net.WebSockets;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Timers;
@@ -45,56 +43,6 @@
             return JsonConvert.SerializeObject(thing, Formatting.Indented);
         }
 
-        private void SendWebSocketJson<T>(T thing)
-        {
-            var serialized = JsonConvert.SerializeObject(thing);
-            var serializedBytes = Encoding.UTF8.GetBytes(serialized);
-            var sendResult = this.wssClient.Send(serializedBytes, (uint) serializedBytes.Length,
-                WebSocketClient.WEBSOCKET_PACKET_TYPES.LWS_WS_OPCODE_07__TEXT_FRAME,
-                WebSocketClient.WEBSOCKET_PACKET_SEGMENT_CONTROL.WEBSOCKET_CLIENT_PACKET_END);
-            if (sendResult != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_SUCCESS)
-            {
-                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
-                    $"Send did not complete, got result {sendResult}");
-                throw new WebSocketException($"Send did not complete, got result {sendResult}");
-            }
-        }
-
-        private T ReceiveWebSocketJson<T>()
-        {
-            var bytes = this.ReceiveWebSocketBytes();
-            var converted = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
-            return JsonConvert.DeserializeObject<T>(converted);
-        }
-
-        private JObject ReceiveWebSocketUnknownJson()
-        {
-            var bytes = this.ReceiveWebSocketBytes();
-
-            var converted = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
-            return JObject.Parse(converted);
-        }
-
-        private byte[] ReceiveWebSocketBytes()
-        {
-            var receiveResult = this.wssClient.Receive(out var bytes, out var opcode);
-            if (receiveResult != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_SUCCESS)
-            {
-                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
-                    $"Receive did not complete, got result {receiveResult}");
-                throw new WebSocketException($"Receive did not okay, got result {receiveResult}");
-            }
-
-            if (opcode != WebSocketClient.WEBSOCKET_PACKET_TYPES.LWS_WS_OPCODE_07__TEXT_FRAME)
-            {
-                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
-                    $"Did not receive a text message, got {opcode} and {bytes} instead");
-                throw new WebSocketException(
-                    $"Did not receive a text message, got {opcode} and {bytes} instead");
-            }
-
-            return bytes;
-        }
 
         /// <summary>
         ///     Connection changed event handler. Updates the status of child devices.
@@ -125,13 +73,14 @@
         {
             this.sessionTimeoutTimer = new Timer(SessionTimeoutLength);
             this.sessionTimeoutTimer.Elapsed += this.SessionTimeoutTriggered;
-            this.backgroundWebSocketCancellation = new CancellationTokenSource();
-            var token = this.backgroundWebSocketCancellation.Token;
-            this.backgroundWebSocketTask = Task.Run(() => { this.BackgroundWebSocketHandler(token); }, token);
+            this.loginCancellation = new CancellationTokenSource();
+            var token = this.loginCancellation.Token;
+            this.loginTask = Task.Run(() => { this.BackgroundLoginHandler(token); }, token);
         }
 
+
         /**
-         * This routine handles websocket send/receive.
+         * This routine handles websocket related send tasks.
          * Unfortunately, they way Crestron does things makes no standard WebSocket client library work
          * (including websocket-client, websocket-sharp, etc).  The Crestron provided Websocket client
          * also doesn't provide enough functionality to port the libraries that rely on .net WebSocket functionality
@@ -139,22 +88,17 @@
          * Overall, the situation is a mess.
          * To workaround all the fun issues inherent in this, we use the crestron websocket client synchronously
          * (because the async API is hilariously bad), and to avoid blocking, do it in a thread.
-         *  */
-        private void BackgroundWebSocketHandler(CancellationToken cancelToken)
+         */
+        private void BackgroundLoginHandler(CancellationToken cancelToken)
         {
-            bool firstTime = true;
+            var firstTime = true;
             while (true)
-            {
                 try
                 {
                     if (!firstTime)
-                    {
                         Thread.Sleep(5000);
-                    }
                     else
-                    {
                         firstTime = false;
-                    }
 
                     if (cancelToken.IsCancellationRequested)
                         return;
@@ -183,27 +127,26 @@
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception in login handler:{e}");
                     this.isAuthenticatedToWaterFurnace = false;
                 }
-            }
         }
 
         public void Stop()
         {
             try
             {
-                this.backgroundWebSocketCancellation.Cancel();
-                this.backgroundWebSocketTask.Wait();
-                this.backgroundWebSocketCancellation.Dispose();
+                this.loginCancellation.Cancel();
+                this.loginTask.Wait();
+                this.loginCancellation.Dispose();
             }
             catch (Exception e)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception during cancellation:{e}");
             }
 
+            this.wssClient.Disconnect();
             this.waterFurnaceCookies = null;
             this.sessionTimeoutTimer.Stop();
             this.sessionTimeoutTimer = null;
             this.isAuthenticatedToWaterFurnace = false;
-            this.wssClient = null;
         }
 
         private bool LoginUsingWeb()
@@ -236,12 +179,10 @@
                     this.sessionId = loginResult.Cookies[0].Value;
                     return true;
                 }
-                else
-                {
-                    WaterFurnaceLogging.TraceMessage(this.EnableLogging,
-                        $"Error Authenticating:{loginResult?.StatusCode}");
-                    return false;
-                }
+
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
+                    $"Error Authenticating:{loginResult?.StatusCode}");
+                return false;
             }
             catch (AggregateException e)
             {
@@ -286,27 +227,13 @@
 
         private bool SetupWssClient(string websocketUrl)
         {
-            WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Creating websocket client");
-            this.wssClient = new WebSocketClient
+            this.wssClient = new WaterFurnaceSymphonyWebsocketClient(this)
             {
-                URL = websocketUrl,
-                Port = WebSocketClient.WEBSOCKET_DEF_SSL_SECURE_PORT,
-                DisconnectCallBack = this.WebSocketDisconnectHandler,
-                SSL = true,
-                KeepAlive = false,
+                DisconnectCallback = this.WebSocketDisconnectHandler,
             };
-
-            WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Performing connect to {this.wssClient.URL}");
-            var connectResult = this.wssClient.Connect();
-            if (connectResult != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_SUCCESS)
-            {
-                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
-                    $"Error while connecting to WebSocket:{connectResult}");
+            var connectResult = this.wssClient.Connect(websocketUrl);
+            if (!connectResult)
                 return false;
-            }
-
-            WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Connect done, starting login");
-
             return this.PerformWebSocketLogin();
         }
 
@@ -324,7 +251,7 @@
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Created transaction counter");
 
             // Send login command
-            this.SendWebSocketJson(new SymphonyCommand
+            this.wssClient.SendWebSocketJson(new SymphonyCommand
             {
                 Command = "login",
                 TransactionId = this.transactionCounter.GetNextTransactionId(),
@@ -333,7 +260,7 @@
             });
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Sent JSON");
-            var loginResponse = this.ReceiveWebSocketJson<LoginResponse>();
+            var loginResponse = this.wssClient.ReceiveWebSocketJson<LoginResponse>();
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Received JSON");
             var result = this.HandleLoginResponse(loginResponse);
@@ -544,8 +471,8 @@
                 RegisterList = WaterFurnaceConstants.DefaultReadList,
             };
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Sending JSON to device:{device.AWLId}");
-            this.SendWebSocketJson(readCommand);
-            var readResponse = this.ReceiveWebSocketJson<ReadResponse>();
+            this.wssClient.SendWebSocketJson(readCommand);
+            var readResponse = this.wssClient.ReceiveWebSocketJson<ReadResponse>();
             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                 $"Received JSON from device {device.AWLId}:{ToFormattedJson(readResponse)}");
             return readResponse;
@@ -566,8 +493,8 @@
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                 $"Sending write command {writeJson}");
-            this.SendWebSocketJson(writeJson);
-            var writeResult = this.ReceiveWebSocketUnknownJson();
+            this.wssClient.SendWebSocketJson(writeJson);
+            var writeResult = this.wssClient.ReceiveWebSocketUnknownJson();
             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                 $"Received result from write command:{writeResult}");
         }
@@ -602,17 +529,14 @@
 
         // Transaction Id generator for symphony commands
         private WaterFurnaceSymphonyTransactionCounter transactionCounter;
-
-        // WebSocket client we are using to communicate with the symphony service
-        private WebSocketClient wssClient;
-
+        
         // List of gateways that existed as of our last poll. May be empty/null.
         private List<Gateway> lastLoginGatewayList;
 
         // Background thread that handles staying logged in
-        private Task backgroundWebSocketTask;
-        private CancellationTokenSource backgroundWebSocketCancellation;
-
+        private Task loginTask;
+        private CancellationTokenSource loginCancellation;
+        
         // Queue of heating setpoint changes requested by devices
         private readonly ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)> heatingSetPointChanges =
             new ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)>();
@@ -620,6 +544,8 @@
         // Queue of cooling setpoint changes requested by devices
         private readonly ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)> coolingSetPointChanges =
             new ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)>();
+
+        private WaterFurnaceSymphonyWebsocketClient wssClient;
 
         #endregion Fields
     }
