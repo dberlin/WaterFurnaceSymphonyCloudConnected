@@ -11,11 +11,76 @@
     using Newtonsoft.Json.Linq;
     using WaterFurnaceCommon;
 
+    /**
+     * This class handles WebSocket related stuff
+     * Unfortunately, they way Crestron does things makes no standard WebSocket client library work
+     * (including websocket-client, websocket-sharp, etc).  The Crestron provided Websocket client
+     * also doesn't provide enough functionality to port the libraries that rely on .net WebSocket functionality
+     * to crestron home.  Under the covers, it's really a C library being exposed through .net.
+     * Overall, the situation is a mess.  We try to abstract it here
+     */
     public class WaterFurnaceSymphonyWebsocketClient : IDisposable
     {
+        public WebSocketClient.WebSocketClientAsyncDisconnectCallback DisconnectCallback;
+        private readonly WaterFurnaceSymphonyPlatformProtocol protocol;
+        private CancellationTokenSource webSocketRecvCancellation;
+
+        private readonly BlockingCollection<byte[]>
+            webSocketRecvQueue = new BlockingCollection<byte[]>();
+
+        // Background task that reads websocket responses
+        private Task webSocketRecvTask;
+        private CancellationTokenSource webSocketSendCancellation;
+
+        private readonly BlockingCollection<(byte[] bytes, WebSocketClient.WEBSOCKET_PACKET_TYPES packetType)>
+            webSocketSendQueue =
+                new BlockingCollection<(byte[] bytes, WebSocketClient.WEBSOCKET_PACKET_TYPES packetType)>();
+
+
+        // Background task that reads websocket responses
+        private Task webSocketSendTask;
+
+        // WebSocket client we are using to communicate with the symphony service
+        private WebSocketClient wssClient;
+
         public WaterFurnaceSymphonyWebsocketClient(WaterFurnaceSymphonyPlatformProtocol protocol)
         {
             this.protocol = protocol;
+        }
+
+        public bool EnableLogging => this.protocol?.EnableLogging ?? false;
+
+        public bool Connected => this.wssClient?.Connected ?? false;
+
+        public void Dispose()
+        {
+            try
+            {
+                this.webSocketRecvCancellation.Cancel();
+                this.webSocketRecvTask.Wait();
+                this.webSocketRecvCancellation.Dispose();
+            }
+            catch (Exception e)
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception during cancellation:{e}");
+            }
+
+            try
+            {
+                this.webSocketSendCancellation.Cancel();
+                this.webSocketSendTask.Wait();
+                this.webSocketSendCancellation.Dispose();
+            }
+            catch (Exception e)
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception during cancellation:{e}");
+            }
+
+            this.webSocketSendQueue.Dispose();
+            this.webSocketRecvQueue.Dispose();
+
+            this.wssClient.Dispose();
+            this.wssClient = null;
         }
 
         public void Disconnect()
@@ -85,10 +150,8 @@
                     var (bytes, packetType) = this.webSocketSendQueue.Take(cancelToken);
                     var result = this.wssClient.Send(bytes, (uint) (bytes?.Length ?? 0), packetType);
                     if (result != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_SUCCESS)
-                    {
                         WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                             $"Send did not complete successfully, got result:{result}");
-                    }
                 }
                 catch (Exception e)
                 {
@@ -160,62 +223,5 @@
         {
             return this.webSocketRecvQueue.Take(this.webSocketRecvCancellation.Token);
         }
-
-        public void Dispose()
-        {
-            try
-            {
-                this.webSocketRecvCancellation.Cancel();
-                this.webSocketRecvTask.Wait();
-                this.webSocketRecvCancellation.Dispose();
-            }
-            catch (Exception e)
-            {
-                WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception during cancellation:{e}");
-            }
-
-            try
-            {
-                this.webSocketSendCancellation.Cancel();
-                this.webSocketSendTask.Wait();
-                this.webSocketSendCancellation.Dispose();
-            }
-            catch (Exception e)
-            {
-                WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception during cancellation:{e}");
-            }
-
-            this.webSocketSendQueue.Dispose();
-            this.webSocketRecvQueue.Dispose();
-
-            this.wssClient.Dispose();
-            this.wssClient = null;
-        }
-
-        public WebSocketClient.WebSocketClientAsyncDisconnectCallback DisconnectCallback;
-
-        // Background task that reads websocket responses
-        private Task webSocketRecvTask;
-        private CancellationTokenSource webSocketRecvCancellation;
-
-
-        // Background task that reads websocket responses
-        private Task webSocketSendTask;
-        private CancellationTokenSource webSocketSendCancellation;
-
-        private BlockingCollection<(byte[] bytes, WebSocketClient.WEBSOCKET_PACKET_TYPES packetType)>
-            webSocketSendQueue =
-                new BlockingCollection<(byte[] bytes, WebSocketClient.WEBSOCKET_PACKET_TYPES packetType)>();
-
-        private BlockingCollection<byte[]>
-            webSocketRecvQueue = new BlockingCollection<byte[]>();
-
-        public bool EnableLogging => this.protocol?.EnableLogging ?? false;
-
-        public bool Connected => wssClient?.Connected ?? false;
-
-        // WebSocket client we are using to communicate with the symphony service
-        private WebSocketClient wssClient;
-        private WaterFurnaceSymphonyPlatformProtocol protocol;
     }
 }

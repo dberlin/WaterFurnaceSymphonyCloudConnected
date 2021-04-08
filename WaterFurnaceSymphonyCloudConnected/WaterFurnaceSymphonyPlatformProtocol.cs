@@ -73,23 +73,16 @@
         {
             this.sessionTimeoutTimer = new Timer(SessionTimeoutLength);
             this.sessionTimeoutTimer.Elapsed += this.SessionTimeoutTriggered;
-            this.loginCancellation = new CancellationTokenSource();
-            var token = this.loginCancellation.Token;
-            this.loginTask = Task.Run(() => { this.BackgroundLoginHandler(token); }, token);
+            this.backgroundTaskCancellation = new CancellationTokenSource();
+            var token = this.backgroundTaskCancellation.Token;
+            this.backgroundTask = Task.Run(() => { this.BackgroundTaskHandler(token); }, token);
         }
 
 
         /**
-         * This routine handles websocket related send tasks.
-         * Unfortunately, they way Crestron does things makes no standard WebSocket client library work
-         * (including websocket-client, websocket-sharp, etc).  The Crestron provided Websocket client
-         * also doesn't provide enough functionality to port the libraries that rely on .net WebSocket functionality
-         * to crestron home.  Under the covers, it's really a C library being exposed through .net.
-         * Overall, the situation is a mess.
-         * To workaround all the fun issues inherent in this, we use the crestron websocket client synchronously
-         * (because the async API is hilariously bad), and to avoid blocking, do it in a thread.
+         * This routine handles login and polling tasks.
          */
-        private void BackgroundLoginHandler(CancellationToken cancelToken)
+        private void BackgroundTaskHandler(CancellationToken cancelToken)
         {
             var firstTime = true;
             while (true)
@@ -133,9 +126,9 @@
         {
             try
             {
-                this.loginCancellation.Cancel();
-                this.loginTask.Wait();
-                this.loginCancellation.Dispose();
+                this.backgroundTaskCancellation.Cancel();
+                this.backgroundTask.Wait();
+                this.backgroundTaskCancellation.Dispose();
             }
             catch (Exception e)
             {
@@ -529,14 +522,14 @@
 
         // Transaction Id generator for symphony commands
         private WaterFurnaceSymphonyTransactionCounter transactionCounter;
-        
+
         // List of gateways that existed as of our last poll. May be empty/null.
         private List<Gateway> lastLoginGatewayList;
 
-        // Background thread that handles staying logged in
-        private Task loginTask;
-        private CancellationTokenSource loginCancellation;
-        
+        // Background thread that handles login and polling.
+        private Task backgroundTask;
+        private CancellationTokenSource backgroundTaskCancellation;
+
         // Queue of heating setpoint changes requested by devices
         private readonly ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)> heatingSetPointChanges =
             new ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)>();
