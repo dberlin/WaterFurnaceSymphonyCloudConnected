@@ -26,6 +26,7 @@
             this.WaterFurnaceUsername = username;
             this.WaterFurnacePassword = password;
             this.isAuthenticatedToWaterFurnace = false;
+            this.EnableLogging = true;
         }
 
         public void SetHeatingSetPoint(IWaterFurnaceDevice device, int setPoint)
@@ -65,6 +66,7 @@
 
         private void SessionTimeoutTriggered(object sender, ElapsedEventArgs elapsedEventArgs)
         {
+            WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Session timeout triggered");
             this.sessionTimeoutTriggered = true;
             this.sessionId = string.Empty;
         }
@@ -99,6 +101,7 @@
                     if (this.sessionTimeoutTriggered || !this.isAuthenticatedToWaterFurnace || this.wssClient == null ||
                         !this.wssClient.Connected)
                     {
+                        WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Restarting websocket client");
                         this.sessionTimeoutTriggered = false;
                         this.isAuthenticatedToWaterFurnace = false;
                         if (!this.RestartWebsocketConnection())
@@ -168,7 +171,6 @@
                     this.sessionTimeoutTimer.Interval = SessionTimeoutLength;
                     this.sessionTimeoutTimer.Start();
                     // Return session ID
-
                     this.sessionId = loginResult.Cookies[0].Value;
                     return true;
                 }
@@ -220,6 +222,8 @@
 
         private bool SetupWssClient(string websocketUrl)
         {
+            var oldClient = this.wssClient;
+            oldClient?.Disconnect();
             this.wssClient = new WaterFurnaceSymphonyWebsocketClient(this)
             {
                 DisconnectCallback = this.WebSocketDisconnectHandler,
@@ -465,6 +469,8 @@
             };
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Sending JSON to device:{device.AWLId}");
             this.wssClient.SendWebSocketJson(readCommand);
+            WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Receiving JSON for device:{device.AWLId}");
+
             var readResponse = this.wssClient.ReceiveWebSocketJson<ReadResponse>();
             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                 $"Received JSON from device {device.AWLId}:{ToFormattedJson(readResponse)}");

@@ -6,7 +6,6 @@
   <p align="center">
     A Crestron Home driver that Waterfurnace Geothermal heat pumps
   </p>
-</p>
 
 
 

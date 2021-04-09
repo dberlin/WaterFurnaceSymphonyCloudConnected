@@ -54,6 +54,9 @@
 
         public void Dispose()
         {
+            // Dispose of the client first to force exceptions on the threads .
+            this.wssClient.Dispose();
+            this.wssClient = null;
             try
             {
                 this.webSocketRecvCancellation.Cancel();
@@ -79,8 +82,6 @@
             this.webSocketSendQueue.Dispose();
             this.webSocketRecvQueue.Dispose();
 
-            this.wssClient.Dispose();
-            this.wssClient = null;
         }
 
         public void Disconnect()
