@@ -24,6 +24,7 @@
         public WebSocketClient.WebSocketClientAsyncDisconnectCallback DisconnectCallback;
         private readonly WaterFurnaceSymphonyPlatformProtocol protocol;
         private CancellationTokenSource webSocketRecvCancellation;
+        private const int TakeTimeout = 10000;
 
         private readonly BlockingCollection<byte[]>
             webSocketRecvQueue = new BlockingCollection<byte[]>();
@@ -81,7 +82,6 @@
 
             this.webSocketSendQueue.Dispose();
             this.webSocketRecvQueue.Dispose();
-
         }
 
         public void Disconnect()
@@ -148,11 +148,14 @@
                     return;
                 try
                 {
-                    var (bytes, packetType) = this.webSocketSendQueue.Take(cancelToken);
-                    var result = this.wssClient.Send(bytes, (uint) (bytes?.Length ?? 0), packetType);
-                    if (result != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_SUCCESS)
+                    this.webSocketSendQueue.TryTake(out var takeOutput, TakeTimeout, cancelToken);
+
+                    var result = this.wssClient.SendAsync(takeOutput.bytes, (uint) (takeOutput.bytes?.Length ?? 0),
+                        takeOutput.packetType);
+                    if (result != WebSocketClient.WEBSOCKET_RESULT_CODES.WEBSOCKET_CLIENT_PENDING)
                         WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                             $"Send did not complete successfully, got result:{result}");
+                    Thread.Sleep(200);
                 }
                 catch (Exception e)
                 {
@@ -222,7 +225,11 @@
 
         private byte[] ReceiveWebSocketBytes()
         {
-            return this.webSocketRecvQueue.Take(this.webSocketRecvCancellation.Token);
+            if (this.webSocketRecvQueue.TryTake(out var takeResult, TakeTimeout, webSocketRecvCancellation.Token))
+                return takeResult;
+            WaterFurnaceLogging.TraceMessage(this.EnableLogging, "TryTake failed in ReceiveWebSocketBytes");
+            throw new TimeoutException("TryTake failed in ReceiveWebSocketBytes");
+
         }
     }
 }

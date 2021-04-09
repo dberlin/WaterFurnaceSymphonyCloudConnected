@@ -452,7 +452,7 @@
                 catch (Exception e)
                 {
                     WaterFurnaceLogging.TraceMessage(this.EnableLogging,
-                        $"Exception while sending read command:{e}");
+                        $"Exception while reading device data:{e}");
                 }
         }
 
