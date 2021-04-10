@@ -224,10 +224,7 @@
         {
             var oldClient = this.wssClient;
             oldClient?.Disconnect();
-            this.wssClient = new WaterFurnaceSymphonyWebsocketClient(this)
-            {
-                DisconnectCallback = this.WebSocketDisconnectHandler,
-            };
+            this.wssClient = new WaterFurnaceSymphonyWebsocketClient(this);
             var connectResult = this.wssClient.Connect(websocketUrl);
             if (!connectResult)
                 return false;

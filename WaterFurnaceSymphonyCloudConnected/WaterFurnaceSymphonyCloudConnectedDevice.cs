@@ -8,12 +8,14 @@
     using Flurl.Http.Configuration;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
+    using Rebex;
     using WaterFurnaceCommon;
 
     public class WaterFurnaceSymphonyCloudConnectedDevice : AGateway, ICloudConnected
     {
         public WaterFurnaceSymphonyCloudConnectedDevice()
         {
+            Licensing.Key = RebexLicensing.LicensingKey;
             FlurlHttp.Configure(settings =>
             {
                 var jsonSettings = new JsonSerializerSettings

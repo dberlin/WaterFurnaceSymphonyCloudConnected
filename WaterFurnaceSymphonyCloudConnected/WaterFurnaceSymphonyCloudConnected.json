@@ -14,8 +14,8 @@
       "DeviceType": "Platform",
       "Manufacturer": "WaterFurnace",
       "BaseModel": "Symphony",
-      "VersionDate": " 2021-04-09 17:28:10.0551 ",
-      "DriverVersion": "4.1.000.0070",
+      "VersionDate": " 2021-04-09 20:46:36.1933 ",
+      "DriverVersion": "4.1.000.0076",
       "SdkVersion": "4.0.0",
       "Description": "WaterFurnace Symphony support", 
       "Guid": "12661764-59ED-47CC-B06C-DE477DCE84AD",
@@ -68,7 +68,9 @@
       "Flurl.Http.dll",
       "WaterFurnaceCommon.dll",
       "WaterFurnaceSymphonySingleDevice.dll",
-      "websocket-sharp.dll"
+      "Rebex.WebSocket.dll",
+      "Rebex.Common.dll",
+      "Rebex.Networking.dll"
     ]
   }
 }
