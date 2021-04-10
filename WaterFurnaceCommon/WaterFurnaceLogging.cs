@@ -19,12 +19,9 @@ namespace WaterFurnaceCommon
             [CallerLineNumber] int sourceLineNumber = 0)
         {
             if (!enabled) return;
-            CrestronConsole.Print("message: ");
+            CrestronConsole.Print("{0} - {1}:{2}  :", memberName, sourceFilePath, sourceLineNumber);
             foreach (var str in message.Split('\n'))
                 CrestronConsole.PrintLine(str.TrimEnd('\r'));
-            CrestronConsole.PrintLine("member name: " + memberName);
-            CrestronConsole.PrintLine("source file path: " + sourceFilePath);
-            CrestronConsole.PrintLine("source line number: " + sourceLineNumber);
         }
     }
 }

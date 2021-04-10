@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+
 <uidefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:noNamespaceSchemaLocation="https://prd-use-rad-assets.azurewebsites.net/ExtensionsSchemaDefinition.xsd">
-    <version ver="2.0"/>
+    <version ver="2.0" />
     <tile icon="{ConnectionStateIcon}" navigation="show:MainPage" showinhomepage="#true"
-          showinroompage="#true"/>
+          showinroompage="#true" />
     <layouts>
         <layout id="MainPage" isdefaultlayout="#true">
             <controls>
@@ -17,24 +18,24 @@
                             currenttemperature="{ThermostatCurrentTemperature}"
                             setpointheat="{ThermostatHeatSetPoint}"
                             setpointcool="{ThermostatCoolSetPoint}"
-                            setpointauto="{ThermostatAutoSetPoint}"
-                />
-                <subheader id="StatusHeader" label="^EquipmentStatusLabel"/>
+                            setpointauto="{ThermostatAutoSetPoint}" />
+                <subheader id="StatusHeader" label="^EquipmentStatusLabel" />
                 <controlgroup>
-                    <textdisplay id="WaterTempDisplay" title="^WaterTempTitle" line1label="{WaterTempLabel}"/>
-                    <textdisplay id="ReturnAirTempDisplay" title="^ReturnAirTempTitle" line1label="{ReturnAirTempLabel}"/>
+                    <textdisplay id="WaterTempDisplay" title="^WaterTempTitle" line1label="{WaterTempLabel}" />
+                    <textdisplay id="ReturnAirTempDisplay" title="^ReturnAirTempTitle"
+                                 line1label="{ReturnAirTempLabel}" />
                     <textdisplay id="TotalPowerUsage" title="^TotalPowerUsageTitle"
-                                 line1label="{TotalPowerUsageLabel}"/>
+                                 line1label="{TotalPowerUsageLabel}" />
                     <textdisplay id="CompressorPowerUsage" title="^CompressorPowerUsageTitle"
-                                 line1label="{CompressorPowerUsageLabel}"/>
-                    <textdisplay id="FanPowerUsage" title="^FanPowerUsageTitle" line1label="{FanPowerUsageLabel}"/>
+                                 line1label="{CompressorPowerUsageLabel}" />
+                    <textdisplay id="FanPowerUsage" title="^FanPowerUsageTitle" line1label="{FanPowerUsageLabel}" />
                     <textdisplay id="PumpPowerUsage" title="^PumpPowerUsageTitle"
-                                 line1label="{PumpPowerUsageLabel}"/>
+                                 line1label="{PumpPowerUsageLabel}" />
                     <textdisplay id="AuxHeatPowerUsage" title="^AuxHeatPowerUsageTitle"
-                                 line1label="{AuxHeatPowerUsageLabel}"/>
+                                 line1label="{AuxHeatPowerUsageLabel}" />
                 </controlgroup>
             </controls>
         </layout>
     </layouts>
-    <alerts/>
+    <alerts />
 </uidefinition>

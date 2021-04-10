@@ -9,7 +9,6 @@
     using System.Timers;
     using Crestron.RAD.Common.Transports;
     using Crestron.RAD.DeviceTypes.Gateway;
-    using Crestron.SimplSharp.CrestronWebSocketClient;
     using Flurl.Http;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
@@ -43,8 +42,7 @@
         {
             return JsonConvert.SerializeObject(thing, Formatting.Indented);
         }
-
-
+        
         /// <summary>
         ///     Connection changed event handler. Updates the status of child devices.
         /// </summary>
@@ -104,7 +102,7 @@
                         WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Restarting websocket client");
                         this.sessionTimeoutTriggered = false;
                         this.isAuthenticatedToWaterFurnace = false;
-                        if (!this.RestartWebsocketConnection())
+                        if (!this.RestartWebsocketConnection().Result)
                         {
                             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                                 "Error restarting websocket connection");
@@ -194,7 +192,7 @@
             return wssMatch.Success ? wssMatch.Value : "";
         }
 
-        private bool RestartWebsocketConnection()
+        private async Task<bool> RestartWebsocketConnection()
         {
             if (!this.isAuthenticatedToWaterFurnace)
             {
@@ -217,7 +215,9 @@
                 return false;
             }
 
-            return this.SetupWssClient(websocketUrl);
+            if (!this.SetupWssClient(websocketUrl))
+                return false;
+            return await this.PerformWebSocketLogin();
         }
 
         private bool SetupWssClient(string websocketUrl)
@@ -226,26 +226,16 @@
             oldClient?.Disconnect();
             this.wssClient = new WaterFurnaceSymphonyWebsocketClient(this);
             var connectResult = this.wssClient.Connect(websocketUrl);
-            if (!connectResult)
-                return false;
-            return this.PerformWebSocketLogin();
+            return connectResult;
         }
 
-        private int WebSocketDisconnectHandler(WebSocketClient.WEBSOCKET_RESULT_CODES error, object o1)
-        {
-            if (this.IsConnected)
-                this.ConnectionChanged(false);
-            this.isAuthenticatedToWaterFurnace = false;
-            return 0;
-        }
-
-        private bool PerformWebSocketLogin()
+        private async Task<bool> PerformWebSocketLogin()
         {
             this.transactionCounter = new WaterFurnaceSymphonyTransactionCounter();
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Created transaction counter");
 
             // Send login command
-            this.wssClient.SendWebSocketJson(new SymphonyCommand
+            await this.wssClient.SendWebSocketJson(new SymphonyCommand
             {
                 Command = "login",
                 TransactionId = this.transactionCounter.GetNextTransactionId(),
@@ -254,7 +244,7 @@
             });
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Sent JSON");
-            var loginResponse = this.wssClient.ReceiveWebSocketJson<LoginResponse>();
+            var loginResponse = await this.wssClient.ReceiveWebSocketJson<LoginResponse>();
 
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Received JSON");
             var result = this.HandleLoginResponse(loginResponse);
@@ -389,9 +379,7 @@
         private void HandleReadResponse(ReadResponse readResponse)
         {
             var deviceId = WaterFurnaceUtilities.FormatDeviceId(readResponse.AWLId);
-
             this.waterFurnaceDevices.TryGetValue(deviceId, out var correctDevice);
-
             if (correctDevice == null)
             {
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
@@ -402,7 +390,7 @@
             correctDevice.RefreshDeviceWithData(readResponse);
         }
 
-        private void PollSymphony()
+        private async void PollSymphony()
         {
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Polling symphony");
 
@@ -443,7 +431,14 @@
                         if (deviceUpdate.Any())
                             this.SendDeviceUpdate(device, deviceUpdate);
 
-                    var readResponse = this.ReadDeviceData(device);
+                    var readResponse = await this.ReadDeviceData(device);
+                    if (readResponse == null)
+                    {
+                        WaterFurnaceLogging.TraceMessage(this.EnableLogging,
+                            "Got null read response, so ignoring this read");
+                        return;
+                    }
+
                     this.HandleReadResponse(readResponse);
                 }
                 catch (Exception e)
@@ -453,7 +448,7 @@
                 }
         }
 
-        private ReadResponse ReadDeviceData(IWaterFurnaceDevice device)
+        private async Task<ReadResponse> ReadDeviceData(IWaterFurnaceDevice device)
         {
             var readCommand = new SymphonyReadCommand
             {
@@ -465,10 +460,10 @@
                 RegisterList = WaterFurnaceConstants.DefaultReadList,
             };
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Sending JSON to device:{device.AWLId}");
-            this.wssClient.SendWebSocketJson(readCommand);
+            await this.wssClient.SendWebSocketJson(readCommand);
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Receiving JSON for device:{device.AWLId}");
 
-            var readResponse = this.wssClient.ReceiveWebSocketJson<ReadResponse>();
+            var readResponse = await this.wssClient.ReceiveWebSocketJson<ReadResponse>();
             WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                 $"Received JSON from device {device.AWLId}:{ToFormattedJson(readResponse)}");
             return readResponse;

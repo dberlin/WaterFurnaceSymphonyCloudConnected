@@ -60,19 +60,30 @@
             this.ThermostatName = name;
         }
 
-        public void RefreshDeviceWithData(ReadResponse data)
+        public void RefreshDeviceWithData(ReadResponse response)
         {
-            this.waterTempLabel.Value = $"{data.EnteringWaterTemp}°F";
-            this.returnAirTempLabel.Value = $"{data.LeavingAirTemp}°F";
-            this.totalPowerUsageLabel.Value = $"{data.TotalUnitPower}W";
-            this.compressorPowerUsageLabel.Value = $"{data.CompressorPower}W";
-            this.fanPowerUsageLabel.Value = $"{data.FanPower}W";
-            this.pumpPowerUsageLabel.Value = $"{data.LoopPumpPower}W";
-            this.auxHeatPowerUsageLabel.Value = $"{data.AuxPower}W";
-            this.thermostatCurrentTemperature.Value = data.ThermostatRoomTemp;
-            this.thermostatCoolSetPoint.Value = data.ActiveSettings.CoolingSetPoint;
-            this.thermostatHeatSetPoint.Value = data.ActiveSettings.HeatingSetPoint;
-            switch (data.ModeOfOperation)
+            if (response.Error != string.Empty)
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Error found in read response: {response.Error}");
+                this.SetConnectionStatus(false);
+                return;
+            }
+            else
+            {
+                this.SetConnectionStatus(true);
+            }
+
+            this.waterTempLabel.Value = $"{response.EnteringWaterTemp}°F";
+            this.returnAirTempLabel.Value = $"{response.LeavingAirTemp}°F";
+            this.totalPowerUsageLabel.Value = $"{response.TotalUnitPower}W";
+            this.compressorPowerUsageLabel.Value = $"{response.CompressorPower}W";
+            this.fanPowerUsageLabel.Value = $"{response.FanPower}W";
+            this.pumpPowerUsageLabel.Value = $"{response.LoopPumpPower}W";
+            this.auxHeatPowerUsageLabel.Value = $"{response.AuxPower}W";
+            this.thermostatCurrentTemperature.Value = response.ThermostatRoomTemp;
+            this.thermostatCoolSetPoint.Value = response.ActiveSettings.CoolingSetPoint;
+            this.thermostatHeatSetPoint.Value = response.ActiveSettings.HeatingSetPoint;
+            switch (response.ModeOfOperation)
             {
                 case ThermostatModeOfOperation.Standby:
                 {
@@ -94,32 +105,32 @@
                 }
                 case ThermostatModeOfOperation.Cooling1:
                 {
-                    this.thermostatCurrentTempLabel.Value = data.AWLABCType == AWLABCType.VariableSpeed
-                        ? $"Cooling Speed {data.ActualCompressorSpeed}"
+                    this.thermostatCurrentTempLabel.Value = response.AWLABCType == AWLABCType.VariableSpeed
+                        ? $"Cooling Speed {response.ActualCompressorSpeed}"
                         : "Cooling Stage 1";
                     this.thermostatModeIcon.Value = "#icCoolingRegular";
                     break;
                 }
                 case ThermostatModeOfOperation.Cooling2:
                 {
-                    this.thermostatCurrentTempLabel.Value = data.AWLABCType == AWLABCType.VariableSpeed
-                        ? $"Cooling Speed {data.ActualCompressorSpeed}"
+                    this.thermostatCurrentTempLabel.Value = response.AWLABCType == AWLABCType.VariableSpeed
+                        ? $"Cooling Speed {response.ActualCompressorSpeed}"
                         : "Cooling Stage 2";
                     this.thermostatModeIcon.Value = "#icCoolingRegular";
                     break;
                 }
                 case ThermostatModeOfOperation.Heating1:
                 {
-                    this.thermostatCurrentTempLabel.Value = data.AWLABCType == AWLABCType.VariableSpeed
-                        ? $"Heating Speed {data.ActualCompressorSpeed}"
+                    this.thermostatCurrentTempLabel.Value = response.AWLABCType == AWLABCType.VariableSpeed
+                        ? $"Heating Speed {response.ActualCompressorSpeed}"
                         : "Heating Stage 1";
                     this.thermostatModeIcon.Value = "#icHeatingRegular";
                     break;
                 }
                 case ThermostatModeOfOperation.Heating2:
                 {
-                    this.thermostatCurrentTempLabel.Value = data.AWLABCType == AWLABCType.VariableSpeed
-                        ? $"Heating Speed {data.ActualCompressorSpeed}"
+                    this.thermostatCurrentTempLabel.Value = response.AWLABCType == AWLABCType.VariableSpeed
+                        ? $"Heating Speed {response.ActualCompressorSpeed}"
                         : "Heating Stage 2";
                     this.thermostatModeIcon.Value = "#icHeatingRegular";
                     break;

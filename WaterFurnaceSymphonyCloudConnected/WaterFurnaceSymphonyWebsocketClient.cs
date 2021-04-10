@@ -3,6 +3,7 @@
     using System;
     using System.Text;
     using System.Threading;
+    using System.Threading.Tasks;
     using Crestron.SimplSharp;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
@@ -70,32 +71,36 @@
             return true;
         }
 
-        public void SendWebSocketJson<T>(T thing)
+        public Task SendWebSocketJson<T>(T thing)
         {
             var serialized = JsonConvert.SerializeObject(thing);
             var serializedBytes = Encoding.UTF8.GetBytes(serialized);
-            this.wssClient.SendAsync(new ArraySegment<byte>(serializedBytes), WebSocketMessageType.Text, true,
-                this.webSocketCancellation.Token).Wait();
+            return this.wssClient.SendAsync(new ArraySegment<byte>(serializedBytes), WebSocketMessageType.Text, true,
+                this.webSocketCancellation.Token);
         }
 
-        public T ReceiveWebSocketJson<T>()
+        public async Task<T> ReceiveWebSocketJson<T>()
         {
-            var bytes = this.ReceiveWebSocketBytes();
+            var bytes = await this.ReceiveWebSocketBytes();
             var converted = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
             return JsonConvert.DeserializeObject<T>(converted);
         }
 
-        public JObject ReceiveWebSocketUnknownJson()
+        public async Task<JObject> ReceiveWebSocketUnknownJson()
         {
-            var bytes = this.ReceiveWebSocketBytes();
-
+            var bytes = await this.ReceiveWebSocketBytes();
             var converted = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
             return JObject.Parse(converted);
         }
 
-        private byte[] ReceiveWebSocketBytes()
+        private Task<byte[]> ReceiveWebSocketBytes()
         {
-            return this.wssClient.ReceiveAsync<byte[]>(this.webSocketCancellation.Token).Result;
+            return this.wssClient.ReceiveAsync<byte[]>(this.webSocketCancellation.Token);
+            /*  var waitResult = receiveTask.Wait(2000, this.webSocketCancellation.Token);
+  
+              if (!waitResult)
+                  throw new WebSocketException("Timed out waiting for response");
+              return receiveTask.Result;*/
         }
     }
 

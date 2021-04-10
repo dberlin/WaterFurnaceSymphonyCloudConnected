@@ -12,6 +12,6 @@
         string DeviceSubType { get; }
         void SetConnectionStatus(bool connected);
         void SetThermostatName(string name);
-        void RefreshDeviceWithData(ReadResponse data);
+        void RefreshDeviceWithData(ReadResponse response);
     }
 }
