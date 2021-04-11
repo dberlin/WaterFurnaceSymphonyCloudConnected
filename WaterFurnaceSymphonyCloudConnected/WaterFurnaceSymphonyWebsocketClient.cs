@@ -53,7 +53,15 @@
 
         public void Disconnect()
         {
-            this.wssClient.Close();
+            try
+            {
+                this.wssClient.Close();
+            }
+            catch (Exception e)
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging, $"Exception during disconnect:{e}");
+            }
+
             this.Dispose();
         }
 
@@ -65,7 +73,7 @@
             this.wssClient = new WebSocketClient();
             this.wssClient.Settings.SslAllowedVersions |= TlsVersion.TLS12;
             this.wssClient.Settings.SslServerCertificateVerifier = new CrestronCertificateValidator();
-            this.wssClient.LogWriter = new CrestronLogWriter {Level = LogLevel.Debug};
+            this.wssClient.LogWriter = new CrestronLogWriter(this.protocol) {Level = LogLevel.Debug};
             this.wssClient.ConnectAsync(websocketUrl, this.webSocketCancellation.Token).Wait();
 
             return true;
@@ -120,8 +128,16 @@
 
     public class CrestronLogWriter : LogWriterBase
     {
+        private readonly WaterFurnaceSymphonyPlatformProtocol protocol;
+
+        public CrestronLogWriter(WaterFurnaceSymphonyPlatformProtocol protocol)
+        {
+            this.protocol = protocol;
+        }
+
         protected override void WriteMessage(string message)
         {
+            if (!this.protocol.EnableLogging) return;
             CrestronConsole.PrintLine("Rebex: {0}", message);
         }
     }

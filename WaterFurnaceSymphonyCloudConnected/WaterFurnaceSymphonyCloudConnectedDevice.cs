@@ -27,9 +27,9 @@
                 };
                 settings.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
             });
-            this.EnableLogging = true;
-            this.EnableRxDebug = true;
-            this.EnableTxDebug = true;
+            // this.EnableLogging = true;
+            // this.EnableRxDebug = true;
+            // this.EnableTxDebug = true;
         }
 
         public void Initialize()

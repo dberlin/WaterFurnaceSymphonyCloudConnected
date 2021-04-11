@@ -16,7 +16,7 @@
     using WaterFurnaceSymphonySingleDevice;
     using Timer = System.Timers.Timer;
 
-    public class WaterFurnaceSymphonyPlatformProtocol : AGatewayProtocol, IWaterFurnacePlatformProtocol
+    public class WaterFurnaceSymphonyPlatformProtocol : AGatewayProtocol, IWaterFurnaceSymphonyPlatformProtocol
     {
         public WaterFurnaceSymphonyPlatformProtocol(string username, string password,
             ISerialTransport transport, byte id) : base(transport, id)
@@ -25,7 +25,7 @@
             this.WaterFurnaceUsername = username;
             this.WaterFurnacePassword = password;
             this.isAuthenticatedToWaterFurnace = false;
-            this.EnableLogging = true;
+            // this.EnableLogging = true;
         }
 
         public void SetHeatingSetPoint(IWaterFurnaceDevice device, int setPoint)
@@ -42,7 +42,7 @@
         {
             return JsonConvert.SerializeObject(thing, Formatting.Indented);
         }
-        
+
         /// <summary>
         ///     Connection changed event handler. Updates the status of child devices.
         /// </summary>
@@ -137,6 +137,7 @@
             }
 
             this.wssClient.Disconnect();
+            this.wssClient = null;
             this.waterFurnaceCookies = null;
             this.sessionTimeoutTimer.Stop();
             this.sessionTimeoutTimer = null;
@@ -278,8 +279,6 @@
         {
             try
             {
-                var oldEnableLogging = this.EnableLogging;
-                this.EnableLogging = true;
                 var gatewayListDiff = DifferenceOfGateways.GenerateDiff(this.lastLoginGatewayList, gatewayList);
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                     $"Old gateway list:{JsonConvert.SerializeObject(this.lastLoginGatewayList)}");
@@ -354,7 +353,6 @@
                 }
 
                 this.lastLoginGatewayList = gatewayList;
-                this.EnableLogging = oldEnableLogging;
             }
             catch (Exception e)
             {

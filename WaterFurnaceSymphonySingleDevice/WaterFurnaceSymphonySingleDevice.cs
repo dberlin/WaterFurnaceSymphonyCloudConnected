@@ -10,13 +10,13 @@
     {
         #region Private driver fields
 
-        private readonly IWaterFurnacePlatformProtocol protocol;
+        private readonly IWaterFurnaceSymphonyPlatformProtocol protocol;
 
         #endregion Private driver fields
 
         public WaterFurnaceSymphonySingleDevice(string awlId, string thermostatName,
             string modelName,
-            IWaterFurnacePlatformProtocol protocol)
+            IWaterFurnaceSymphonyPlatformProtocol protocol)
         {
             this.DeviceId = WaterFurnaceUtilities.FormatDeviceId(awlId);
             this.AWLId = awlId;
@@ -68,10 +68,8 @@
                 this.SetConnectionStatus(false);
                 return;
             }
-            else
-            {
-                this.SetConnectionStatus(true);
-            }
+
+            this.SetConnectionStatus(true);
 
             this.waterTempLabel.Value = $"{response.EnteringWaterTemp}°F";
             this.returnAirTempLabel.Value = $"{response.LeavingAirTemp}°F";

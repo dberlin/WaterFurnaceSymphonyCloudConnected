@@ -14,8 +14,8 @@
       "DeviceType": "Platform",
       "Manufacturer": "WaterFurnace",
       "BaseModel": "Symphony",
-      "VersionDate": " 2021-04-10 15:55:41.7159 ",
-      "DriverVersion": "4.1.000.0082",
+      "VersionDate": " 2021-04-11 10:37:22.2502 ",
+      "DriverVersion": "4.1.000.0086",
       "SdkVersion": "4.0.0",
       "Description": "WaterFurnace Symphony support", 
       "Guid": "12661764-59ED-47CC-B06C-DE477DCE84AD",
@@ -26,7 +26,7 @@
       },
       "SupportedSeries": [
         "Symphony"
-      ],
+      ],  
       "SupportedModels": [
         "Symphony"
       ]
