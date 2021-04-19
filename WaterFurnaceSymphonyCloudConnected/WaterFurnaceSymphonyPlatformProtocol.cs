@@ -146,6 +146,13 @@
 
         private bool LoginUsingWeb()
         {
+            if (this.webLoginFails > 2)
+            {
+                WaterFurnaceLogging.TraceMessage(this.EnableLogging,
+                    "Login is not succeeding, not trying again until attempts reset");
+            }
+
+            this.webLoginFails++;
             WaterFurnaceLogging.TraceMessage(this.EnableLogging, "Starting web login");
             this.sessionId = string.Empty;
             this.sessionTimeoutTimer.Stop();
@@ -171,9 +178,12 @@
                     this.sessionTimeoutTimer.Start();
                     // Return session ID
                     this.sessionId = loginResult.Cookies[0].Value;
+                    this.webLoginFails = 0;
                     return true;
                 }
 
+                if (loginResult == null || loginResult.StatusCode == 200)
+                    this.webLoginFails++;
                 WaterFurnaceLogging.TraceMessage(this.EnableLogging,
                     $"Error Authenticating:{loginResult?.StatusCode}");
                 return false;
@@ -535,6 +545,9 @@
             new ConcurrentQueue<(IWaterFurnaceDevice device, int temperature)>();
 
         private WaterFurnaceSymphonyWebsocketClient wssClient;
+
+        // How many login failures have we had.
+        private int webLoginFails;
 
         #endregion Fields
     }
