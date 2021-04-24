@@ -7,9 +7,9 @@
       "DeviceType": "HVAC",
       "Manufacturer": "WaterFurnace",
       "BaseModel": "Symphony",
-      "VersionDate": " 2021-04-11 10:37:20.3453 ",
-      "DriverVersion": "4.1.000.0016",
-      "SdkVersion": "4.0.0",
+      "VersionDate": " 2021-04-24 10:50:15.0869 ",
+      "DriverVersion": "4.1.0.20",
+      "SdkVersion": "6.0.0",
       "Description": "Thermostat",
       "Guid": "11661764-59ED-47CC-B06C-DE477DCE84AD",
       "ExtensionDeviceData": {
