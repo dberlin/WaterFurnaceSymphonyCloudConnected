@@ -102,7 +102,7 @@
     </PropertyGroup>
     <Import Project="..\ExtraTasks.targets" />
     <Target Name="BeforeBuild">
-        <ReplaceFileText InputFilename="WaterFurnaceSymphonyCloudConnected.json" OutputFilename="WaterFurnaceSymphonyCloudConnected.json" MatchExpression="(VersionDate&quot;.*?&quot;)(.*?)(&quot;)" ReplacementText="$1 $(CurrentDate) $3" />
+        <UpdateVersionDate InputFilename="WaterFurnaceSymphonyCloudConnected.json" OutputFilename="WaterFurnaceSymphonyCloudConnected.json" FieldName="VersionDate"/>
         <IncrementVersion InputFilename="WaterFurnaceSymphonyCloudConnected.json" OutputFilename="WaterFurnaceSymphonyCloudConnected.json" FieldName="DriverVersion"/>
     </Target>
 </Project>

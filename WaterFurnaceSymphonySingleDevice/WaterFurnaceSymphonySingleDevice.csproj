@@ -62,7 +62,7 @@
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Target Name="BeforeBuild">
-        <ReplaceFileText InputFilename="WaterFurnaceSymphonySingleDevice.json" OutputFilename="WaterFurnaceSymphonySingleDevice.json" MatchExpression="(VersionDate&quot;.*?&quot;)(.*?)(&quot;)" ReplacementText="$1 $(CurrentDate) $3" />
+        <UpdateVersionDate InputFilename="WaterFurnaceSymphonySingleDevice.json" OutputFilename="WaterFurnaceSymphonySingleDevice.json" FieldName="VersionDate"/>
         <IncrementVersion InputFilename="WaterFurnaceSymphonySingleDevice.json" OutputFilename="WaterFurnaceSymphonySingleDevice.json" FieldName="DriverVersion"/>
 
     </Target>
