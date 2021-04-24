@@ -33,11 +33,11 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="Crestron.DeviceDrivers.API, Version=6.0.0.25, Culture=neutral, PublicKeyToken=null">
-          <HintPath>..\..\..\Downloads\ccdsdk_6_00_000_0025\SDK\Libraries\Crestron.DeviceDrivers.API.dll</HintPath>
+        <Reference Include="Crestron.DeviceDrivers.API, Version=7.0.0.12, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\..\..\Downloads\ccd7\SDK\Libraries\Crestron.DeviceDrivers.API.dll</HintPath>
         </Reference>
-        <Reference Include="RADCommon, Version=6.0.0.25, Culture=neutral, PublicKeyToken=null">
-          <HintPath>..\..\..\Downloads\ccdsdk_6_00_000_0025\SDK\Libraries\RADCommon.dll</HintPath>
+        <Reference Include="RADCommon, Version=7.0.0.12, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\..\..\Downloads\ccd7\SDK\Libraries\RADCommon.dll</HintPath>
         </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
@@ -98,10 +98,11 @@
     </Target>
     -->
     <PropertyGroup>
-        <PostBuildEvent>"c:\users\Daniel Berlin\Downloads\ccdsdk_6_00_000_0025\SDK\ManifestUtil\ManifestUtil.exe" "$(TargetPath)"</PostBuildEvent>
+        <PostBuildEvent>"c:\users\Daniel Berlin\Downloads\ccd7\SDK\ManifestUtil\ManifestUtil.exe" "$(TargetPath)"</PostBuildEvent>
     </PropertyGroup>
     <Import Project="..\ExtraTasks.targets" />
     <Target Name="BeforeBuild">
         <ReplaceFileText InputFilename="WaterFurnaceSymphonyCloudConnected.json" OutputFilename="WaterFurnaceSymphonyCloudConnected.json" MatchExpression="(VersionDate&quot;.*?&quot;)(.*?)(&quot;)" ReplacementText="$1 $(CurrentDate) $3" />
+        <IncrementVersion InputFilename="WaterFurnaceSymphonyCloudConnected.json" OutputFilename="WaterFurnaceSymphonyCloudConnected.json" FieldName="DriverVersion"/>
     </Target>
 </Project>
